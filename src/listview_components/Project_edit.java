@@ -1,128 +1,147 @@
 package listview_components;
 
-import java.awt.Color;
-import java.awt.EventQueue;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import resources.Projects;
+import saver_loader.DataResource;
+
+import javax.swing.JLabel;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import java.awt.font.TextAttribute;
+import java.util.Map;
+import java.awt.Color;
 import javax.swing.JTextField;
 import javax.swing.border.BevelBorder;
+import javax.swing.JButton;
 
-import resources.Projects;
-
+@SuppressWarnings("serial")
 public class Project_edit extends JFrame {
-	private JPanel contentPane;
-	private JTextField NameField;
-	private JTextField DescField;
-	private JTextField BudgetField;
-	private static Projects project;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					Project_edit frame = new Project_edit(project);
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	private JPanel contentPane;
+	private JTextField nameField;
+	private JTextField descriptionField;
+	private JTextField BudgetField;
+
+	
 
 	/**
 	 * Create the frame.
 	 */
-	public Project_edit(Projects project) {
-
-//		this.project = project;
+	@SuppressWarnings("unchecked")
+	public Project_edit() {
 		
-		project.setProjectName("Fuck");
-		
-		System.out.println("Editing?");
-		
+		//Initialize Frame Settings
 		setTitle("PROJECT EDITING");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 266, 255);
+		setBounds(100, 100, 349, 453);
 		contentPane = new JPanel();
 		contentPane.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
+		//Initialize and create Labels
 		JLabel NameLabel = new JLabel("Name");
 		NameLabel.setForeground(Color.BLACK);
 		NameLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		NameLabel.setBounds(10, 11, 55, 36);
+		NameLabel.setBounds(23, 57, 55, 36);
 		contentPane.add(NameLabel);
 		
 		JLabel DescLabel = new JLabel("Description");
 		DescLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		DescLabel.setBounds(10, 76, 83, 26);
+		DescLabel.setBounds(23, 118, 83, 26);
 		contentPane.add(DescLabel);
 		
 		JLabel Budget = new JLabel("Budget");
 		Budget.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		Budget.setBounds(10, 131, 59, 26);
+		Budget.setBounds(23, 174, 59, 26);
 		contentPane.add(Budget);
 		
-		NameField = new JTextField();
-		NameField.setBounds(91, 21, 147, 20);
-		contentPane.add(NameField);
-		NameField.setColumns(10);
+		//Initialize and create Text Fields
+		nameField = new JTextField();
+		nameField.setBounds(139, 67, 147, 20);
+		contentPane.add(nameField);
+		nameField.setColumns(10);
 		
-		NameField.setText(project.getProjectName());
-		
-		DescField = new JTextField();
-		DescField.setBounds(91, 81, 147, 20);
-		contentPane.add(DescField);
-		DescField.setColumns(10);
-		
-		DescField.setText(project.getProjectName());
+		descriptionField = new JTextField();
+		descriptionField.setBounds(139, 123, 147, 20);
+		contentPane.add(descriptionField);
+		descriptionField.setColumns(10);
 		
 		BudgetField = new JTextField();
-		BudgetField.setBounds(91, 136, 147, 20);
+		BudgetField.setBounds(139, 179, 147, 20);
 		contentPane.add(BudgetField);
 		BudgetField.setColumns(10);
 		
-		BudgetField.setText(project.getProjectName());
-		
+		//Initialize and create Buttons
 		JButton btnCancel = new JButton("Cancel");
-		EndingListener buttonEar = new EndingListener();
-		btnCancel.addActionListener(buttonEar);
-		btnCancel.setBounds(34, 183, 89, 23);
+		btnCancel.setBounds(197, 261, 89, 23);
 		contentPane.add(btnCancel);
 		
 		JButton btnSave = new JButton("Save");
-		btnSave.setBounds(130, 183, 89, 23);
-		btnSave.addActionListener(new ButtonListener());
-		
+		btnSave.setBounds(46, 261, 89, 23);
 		contentPane.add(btnSave);
 		
+		JLabel editLabel = new JLabel("Edit");
+		Font font = editLabel.getFont();
+		@SuppressWarnings("rawtypes")
+		Map attributes = font.getAttributes();
+		attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+		editLabel.setFont(font.deriveFont(attributes));
+		//editLabel.setFont(editLabel.getFont().deriveFont(30f));
+		
+		editLabel.setBounds(23, 11, 46, 14);
+		contentPane.add(editLabel);
+		
+		JLabel lblDelete = new JLabel("Delete");
+		lblDelete.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblDelete.setBounds(23, 309, 46, 14);
+		contentPane.add(lblDelete);
+		
+		JLabel lblDoYouWant = new JLabel("Do you want to delete?");
+		lblDoYouWant.setFont(new Font("Tahoma", Font.PLAIN, 13));
+		lblDoYouWant.setBounds(23, 345, 157, 14);
+		contentPane.add(lblDoYouWant);
+		
+		JButton btnNewButton = new JButton("Delete");
+		btnNewButton.setBounds(197, 342, 89, 23);
+		contentPane.add(btnNewButton);
+		
+		//Set and define listeners for both buttons
+		
+		btnCancel.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				disposeWindow();
+			}
+		});
+		
+		btnSave.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				saveAction();
+				disposeWindow();
+			}
+		});
 		
 	}
-	
-	private void SaveAction () {
-		project.setProjectName(NameField.getText());
-		System.exit(0);
-	}
 		
+	private void saveAction () {
+		
+		Projects myProject = DataResource.selectedProject;
+		
+		myProject.setProjectName(nameField.getText());
+		myProject.setDescription(descriptionField.getText());
+		myProject.setBudget(Double.parseDouble(BudgetField.getText()));
+		DataResource.saveToDB();//save the new project to the database
+       
+        //ProjectListPane.updateList(); TODO Update list with new name if there is a change
+                
+    }
 	
-	private class ButtonListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			SaveAction();
-		}
-
-	
+	private void disposeWindow(){
+		this.dispose();
 	}
-	
 }

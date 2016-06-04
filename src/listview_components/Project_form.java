@@ -1,13 +1,7 @@
 package listview_components;
 
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-
-import driver.ClientLauncher;
 import resources.Projects;
 import resources.Users;
 import saver_loader.DataResource;
@@ -16,12 +10,16 @@ import javax.swing.JLabel;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.awt.Color;
 import javax.swing.JTextField;
 import javax.swing.border.BevelBorder;
 import javax.swing.JButton;
 
+@SuppressWarnings("serial")
 public class Project_form extends JFrame {
 
 	private JPanel contentPane;
@@ -36,6 +34,7 @@ public class Project_form extends JFrame {
 	 */
 	public Project_form() {
 		
+		//Initialize Frame Settings
 		setTitle("PROJECT CREATION");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 266, 255);
@@ -44,6 +43,7 @@ public class Project_form extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
+		//Initialize and create Labels
 		JLabel NameLabel = new JLabel("Name");
 		NameLabel.setForeground(Color.BLACK);
 		NameLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
@@ -60,6 +60,7 @@ public class Project_form extends JFrame {
 		Budget.setBounds(10, 131, 59, 26);
 		contentPane.add(Budget);
 		
+		//Initialize and create Text Fields
 		NameField = new JTextField();
 		NameField.setBounds(91, 21, 147, 20);
 		contentPane.add(NameField);
@@ -75,52 +76,60 @@ public class Project_form extends JFrame {
 		contentPane.add(BudgetField);
 		BudgetField.setColumns(10);
 		
+		//Initialize and create Buttons
 		JButton btnCancel = new JButton("Cancel");
-		EndingListener buttonEar = new EndingListener();
-		btnCancel.addActionListener(buttonEar);
 		btnCancel.setBounds(34, 183, 89, 23);
 		contentPane.add(btnCancel);
 		
 		JButton btnSave = new JButton("Save");
-		ButtonListener buttonSave = new ButtonListener();
 		btnSave.setBounds(130, 183, 89, 23);
-		btnSave.addActionListener(new ButtonListener());
-		
 		contentPane.add(btnSave);
 		
+		//Set and define listeners for both buttons
+		
+		btnCancel.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				disposeWindow();
+			}
+		});
+		
+		btnSave.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				saveAction();
+			}
+		});
 		
 	}
-	
-	private void SaveAction () {
-        ArrayList<Users> userList = new ArrayList<Users>();
+		
+	private void saveAction () {
+		
+		//Initialize A user list and add current user to it
+		ArrayList<Users> userList = new ArrayList<Users>();
         userList.add(DataResource.currentUser);
-        Projects newProject = new Projects(NameField.getText(), userList, "",1,
+        
+        // Create the date
+        DateFormat df = new SimpleDateFormat("dd/MM/yy");
+        Date dateobj = new Date();
+        String date = df.format(dateobj);
+        
+        
+        //Create a new Project with information from the form, userList, and date
+        Projects newProject = new Projects(NameField.getText(), userList, date,DataResource.currentUser.getID(),
         		DescField.getText(), Double.parseDouble(BudgetField.getText()));
         DataResource.projectList.add(newProject);
         
-        String name = NameField.getText();
-       
         ProjectListPane.updateList();
         this.dispose();
-        
-        
+                
     }
 	
-	private class ButtonListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			SaveAction();
-			
-			
-			//if(savebutton.getParent().getClass() == new Project_form().getClass())
-				//System.out.print(true);
-			
-			
-			
-			
-		}
+	private void disposeWindow(){
+		this.dispose();
 	}
 	
 	
 }
+

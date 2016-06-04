@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -21,6 +22,8 @@ public class DataResource {
 	public static Users currentUser; //this is the currently logged in user for which the projetList will be populated
 	
 	public static Projects selectedProject;
+	
+	public static Activities selectedActivity;
 	
 	
 	public static Projects getProjectbyProjectId(int projectId){
@@ -42,6 +45,102 @@ public static Projects getProjectbyProjectName(String name){
         }
         return null;
     }
+
+public static void removeProject(Projects project)
+{
+	projectList.remove(project);//removes project from projectList
+	
+	//query database and remove project
+	Connection connection = null;
+	String sql;
+	try{
+    	connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
+    	Statement stmt = connection.createStatement();
+    	sql = ("DELETE FROM projects WHERE id="+project.getId());
+    	stmt.executeQuery(sql);
+    	
+    	ArrayList<Activities> actList = project.getActivityList();
+    	
+    	for(Activities acts: actList)
+    	{
+    		sql = ("DELETE FROM activities WHERE id="+acts.getId());
+    		stmt.executeQuery(sql);
+    	}
+    	
+    	
+	}catch(Exception exception) {
+    	System.out.println(exception.getMessage());
+    }
+
+	//close connection at end
+	try{
+    	connection.close();
+    }catch(Exception closingException)
+    {
+    	System.out.println(closingException.getMessage());
+    }
+	
+}
+
+public static void deleteActivity(Activities A)
+{
+	Connection connection = null;
+	String sql;
+	
+	try{
+    	connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
+    	Statement stmt = connection.createStatement();
+    	//delete activity from activities table in database
+    	sql = ("DELETE FROM activities WHERE id="+A.getId());
+    	stmt.executeUpdate(sql);
+    	
+    	//delete activity from activity_project_relationships in database
+		sql = ("DELETE FROM activity_project_relationships WHERE activity_id="+A.getId());
+		stmt.executeUpdate(sql);
+		
+		//delete activity from activity_edge_relationship in database
+    	sql = ("DELETE FROM activity_edge_relationship WHERE from_activity_id="+A.getId());
+    	stmt.executeUpdate(sql);
+    	
+	}catch(Exception exception) {
+    	System.out.println(exception.getMessage());
+    }
+
+	//close connection at end
+	try{
+    	connection.close();
+    }catch(Exception closingException)
+    {
+    	System.out.println(closingException.getMessage());
+    }
+}
+
+public static void deleteEdgeFromDB(int activityBefore, int activityAfter) {
+Connection connection = null;
+String sql;
+	
+	try{
+    	connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
+    	
+    	// Delete edge in database between the activityBefore and activityAfter
+    	Statement stmt = connection.createStatement();
+    	sql = ("DELETE FROM activity_edge_relationship WHERE from_activity_id="+activityBefore+" AND to_activity_id="+activityAfter);
+    	stmt.executeQuery(sql);
+    	
+	}catch(Exception exception) {
+    	System.out.println(exception.getMessage());
+    }
+
+	//close connection at end
+	try{
+    	connection.close();
+    }catch(Exception closingException)
+    {
+    	System.out.println(closingException.getMessage());
+    }
+}
+
+
 	
 	public static void loadFromDB()
 	{
@@ -61,7 +160,7 @@ public static Projects getProjectbyProjectName(String name){
         	
         	if(result3.next())
         	{
-        		Projects.setProjectCount(result3.getInt(1)) ;
+        		Projects.setProjectCount(result3.getInt(1));
         	}
         	
         	//set activityCount to max activity id from database
@@ -71,7 +170,6 @@ public static Projects getProjectbyProjectName(String name){
         	if(result3.next())
         	{
         		Activities.setActivityCount(result3.getInt(1)) ;
-        	
         	}
 
         	ps = connection.prepareStatement("SELECT * FROM projects "
@@ -190,27 +288,8 @@ public static Projects getProjectbyProjectName(String name){
         		
         		//creates projects with activities
         		projectList.add(project);
-        		
         	}
 		
-        	//print to console to test if projects and activities and dependencies added correctly
-          for(Projects P: projectList)
-          {
-        	  System.out.println(P.getProjectName());
-        	  Set<Activities> vertices = P.getActivitySet();
-        	  for(Activities a: vertices)
-        	  {
-        		  System.out.println(a.getId());
-        	  }
-        	  Set<DefaultEdge> edges = P.getArrowSet();
-        	  for(DefaultEdge e: edges)
-        	  {
-        		  System.out.println(P.getActivityBefore(e).getId());
-        		  System.out.println(P.getActivityAfter(e).getId());
-        	  }
-        	  
-      		
-          }
         }
         catch(Exception exception) {
         	System.out.println(exception.getMessage());
@@ -233,10 +312,10 @@ public static Projects getProjectbyProjectName(String name){
 	public static void saveToDB()
 	{
 		Connection connection = null;
+		Statement stmt = null;
 		try{
         	connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
 
-        	PreparedStatement ps1;
     		String projectName, description, date;
     		int projectID, managerID;
     		double budget;
@@ -251,23 +330,23 @@ public static Projects getProjectbyProjectName(String name){
     			managerID = projects.getManagerID();
     			budget = projects.getBudget();
     		
-    			ps1 = connection.prepareStatement("INSERT INTO Projects(id, name, date, description, budget, manager_id) "
-    					+ "VALUES (" + projectID + ", " + projectName + ", " + date + " " + description + ", " + budget + "," + managerID+");");
-    			ps1.executeQuery();
+    			stmt = connection.createStatement();
+    			String sql = ("INSERT OR REPLACE INTO projects(id, name, date, description, budget, manager_id) "
+    					+ "VALUES (" + projectID + ", '" + projectName + "', '" + date + "', '" + description + "', " + budget + "," + managerID+");");
+    			stmt.executeUpdate(sql);
     			
-    			PreparedStatement ps2;
+    			
     			int userID;
     			//for each project, insert the list of users associated with that project into the database
     			for(Users user: projects.getUserList())
     			{
     				userID = user.getID();
-    				ps2 = connection.prepareStatement("INSERT INTO user_project_relationships(project_id, user_id) VALUES "
+    				sql = ("INSERT OR REPLACE INTO user_project_relationships(project_id, user_id) VALUES "
     						+ "(" + projectID + ", " + userID + ")");
-    				ps2.executeQuery();
+    				stmt.executeUpdate(sql);
     			}
     			
     			//for each project, insert the list of activities associated with that project into the database
-    			PreparedStatement ps3,ps5;
     			int activityID, dependentActivityID;
     			double duration;
     			String actLabel, actDescription; 
@@ -280,15 +359,14 @@ public static Projects getProjectbyProjectName(String name){
     				actDescription = activity.getDescription();
     				duration = activity.getDuration();
     				
-    				ps5 = connection.prepareStatement("INSERT INTO activities(id, label, description, duration) VALUES "
-    						+ "(" + activityID + ", " + actLabel + "," + actDescription +", "+duration +")");
-    				ps5.executeQuery();
+    				sql = ("INSERT OR REPLACE INTO activities(id, label, description, duration) VALUES "
+    						+ "(" + activityID + ", '" + actLabel + "','" + actDescription +"', "+duration +")");
+    				stmt.executeUpdate(sql);
     				
-    				ps3 = connection.prepareStatement("INSERT INTO activity_project_relationships(project_id, activity_id) VALUES "
+    				sql = ("INSERT OR REPLACE INTO activity_project_relationships(project_id, activity_id) VALUES "
     						+ "(" + projectID + ", " + activityID + ")");
-    				ps3.executeQuery();
+    				stmt.executeUpdate(sql);
     				
-    				PreparedStatement ps4;
     				Set<DefaultEdge> edges = projects.getArrowSet();
     				//for currently selected activity, add all the edges to activity_edge_relationship
     				for(DefaultEdge e : edges)
@@ -297,9 +375,9 @@ public static Projects getProjectbyProjectName(String name){
     					{
     						dependentActivityID = projects.getActivityAfter(e).getId();
     						//if the activityID is a before edge, put the before and after edge into table under  from_activity_id and  to_activity_id
-    						ps4 = connection.prepareStatement("INSERT INTO activity_edge_relationship(from_activity_id, to_activity_id) VALUES "
+    						sql = ("INSERT OR REPLACE INTO activity_edge_relationship(from_activity_id, to_activity_id) VALUES "
     	    						+ "(" + activityID + ", " + dependentActivityID + ")");
-    	    				ps4.executeQuery();
+    						stmt.executeUpdate(sql);
     					}
     				}
     			}

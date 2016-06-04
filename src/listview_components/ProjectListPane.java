@@ -25,12 +25,11 @@ public class ProjectListPane extends JPanel{
 	
 	public static JLabel title = new JLabel();
 	public static DefaultListModel<String> listModel = new DefaultListModel<String>();
-	
 	float fontScalar = Toolkit.getDefaultToolkit().getScreenSize().height/1800f;
 
 	public ProjectListPane(){
 		
-		//Set the Layout of the Panel
+		//Set the Layout Manager of the Panel
 		this.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 	
@@ -39,22 +38,28 @@ public class ProjectListPane extends JPanel{
 		for(int i = 0; i < DataResource.projectList.size(); i++)
 		projectNames[i] = DataResource.projectList.get(i).getProjectName();
 		
-			
+		//Add all the names to the list	model
 		for(int i = 0; i < DataResource.projectList.size(); i++){
 			listModel.addElement(projectNames[i]);
 		}
-		list = new JList(listModel);
-		//list = new JList<String>(projectNames);
+		
+		
+		//add model to the list
+		list = new JList<String>(listModel);
+		//Set List variables
 		list.setFont(list.getFont().deriveFont(fontScalar*30f));
 	    list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
+	    
+	    //Add and define Listener for the list
 	    list.addListSelectionListener(new ListSelectionListener() {
 	        
 	    	public void valueChanged(ListSelectionEvent e) {
-	         	        	
-	        	DataResource.selectedProject = DataResource.getProjectbyProjectName(list.getSelectedValue());
-	        	ActivityListPane.updateTable(DataResource.selectedProject);
-	        	
+	         	      
+	    		if (e.getValueIsAdjusting()) {//This line prevents double events
+	    			DataResource.selectedProject = DataResource.getProjectbyProjectName(list.getSelectedValue());
+		        	ActivityListPane.updateTable(DataResource.selectedProject);
+	    	    }
+	        		
 	        }
 	      });
 					    
@@ -88,3 +93,4 @@ public class ProjectListPane extends JPanel{
 	}
 	
 }
+

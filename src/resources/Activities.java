@@ -26,7 +26,7 @@ public class Activities {
 	}
 	
 	public Activities(String description, double duration, String label) {
-		this.id = activityCount++;
+		this.id = ++activityCount;
 		this.description = description;
 		this.duration = duration;
 		this.label = label;

@@ -4,6 +4,9 @@ import java.util.Set;
 
 import org.jgraph.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultDirectedGraph;
+
+import saver_loader.DataResource;
+
 import java.util.ArrayList;
 
 public class Projects {
@@ -26,7 +29,7 @@ public class Projects {
 		
 	public Projects(String projectName, ArrayList<Users> userList, String date, int managerID,
 			String description, double budget) {
-		this.id = projectCount++;
+		this.id = ++projectCount;
 		this.projectName = projectName;
 		this.userList = userList;
 		this.date = date;
@@ -47,6 +50,7 @@ public class Projects {
 		this.managerID = managerID;
 		this.budget = budget;
 		this.description = description;
+		this.id = projectID;
 	}
 	
 	public ArrayList<Users> getUserList() {
@@ -267,6 +271,33 @@ public class Projects {
 				return a.getMaxDuration();
 		}
 		return -1;
+	}
+	
+	public Activities getActivityByLabel(String l){
+		for(Activities a : this.activityList)
+		{
+			if (a.getLabel().equals(l))
+				return a;
+		}
+		return null;
+	}
+	
+	public void deleteActivity(Activities A) {
+		this.activityGraph.removeVertex(A);
+		this.activityList.remove(A);
+		DataResource.deleteActivity(A);
+	}
+	
+	public void resetIncomingEdges(Activities A) {
+		Set<DefaultEdge> incomingEdges = this.getIncomingArrowsOfActivity(A);
+		
+		for(DefaultEdge e : incomingEdges)
+		{
+			this.activityGraph.removeEdge(e);
+			Activities beforeEdge = this.getActivityBefore(e);
+			Activities afterEdge = this.getActivityAfter(e);
+			DataResource.deleteEdgeFromDB(beforeEdge.getId(), afterEdge.getId());			
+		}
 	}
 	
 	public void calculateTimes() {

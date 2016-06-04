@@ -1,9 +1,6 @@
 package graphview_components;
 
 import java.awt.event.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -12,9 +9,10 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import driver.ClientLauncher;
+import listview_components.Activity_edit;
+import listview_components.Activity_form;
+import listview_components.Project_edit;
 import listview_components.Project_form;
-import resources.Projects;
 import saver_loader.DataResource;
 
 @SuppressWarnings("serial")
@@ -39,9 +37,10 @@ public class MenuBar extends JMenuBar{
 	    JMenuItem saveProjectMenuItem = new JMenuItem("Save");
 	    saveProjectMenuItem.setActionCommand("Save");
 	    
-	    JMenuItem deleteProjectMenuItem = new JMenuItem("Delete");
-	    deleteProjectMenuItem.setActionCommand("Delete");
-
+	    JMenuItem editProjectMenuItem = new JMenuItem("Edit");
+	    saveProjectMenuItem.setActionCommand("ProjectEdit");
+	    
+	    
 	    JMenuItem exitMenuItem = new JMenuItem("Exit");
 	    exitMenuItem.setActionCommand("Exit");
 	    
@@ -49,47 +48,126 @@ public class MenuBar extends JMenuBar{
 	    JMenuItem newActivityMenuItem = new JMenuItem("New");
 	    newActivityMenuItem.setActionCommand("New");
 	    
-	    JMenuItem deleteActivityMenuItem = new JMenuItem("Delete");
-	    deleteActivityMenuItem.setActionCommand("Delete");
+	    JMenuItem editActivityMenuItem = new JMenuItem("Edit");
+	    newActivityMenuItem.setActionCommand("ActivityEdit");
+	    
+	   
 	    
 	    //about menu items
 	    JMenuItem aboutMenuItem = new JMenuItem("About");
 	    aboutMenuItem.setActionCommand("About");
 
-	    MenuItemListener menuItemListener = new MenuItemListener();
+	   
 
 	    //project menu items action listeners
-	    newProjectMenuItem.addActionListener(menuItemListener);
-	    openProjectMenuItem.addActionListener(menuItemListener);
-	    saveProjectMenuItem.addActionListener(menuItemListener);
-	    deleteProjectMenuItem.addActionListener(menuItemListener);
-	    exitMenuItem.addActionListener(menuItemListener);
+	    newProjectMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				SwingUtilities.invokeLater(new Runnable(){
+
+					@Override
+					public void run() {
+						
+						Project_form frame = new Project_form();
+						frame.setVisible(true);
+						
+					}
+        	});	}});
+	    
+	    
+	    editProjectMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+			
+				if(DataResource.selectedProject != null){
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
+							Project_edit frame =  new Project_edit();
+							frame.setVisible(true);
+						}
+					});				
+				}else{
+					JOptionPane.showMessageDialog(new JFrame(),
+						    "Must have a selected Project before trying to edit",
+						    "No Project Selected",
+						    JOptionPane.WARNING_MESSAGE);
+					
+				}
+				
+			}
+		});
+	   
+	    exitMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
 	    
 	    //activity menu items action listeners
-	    newActivityMenuItem.addActionListener(menuItemListener);
-	    deleteActivityMenuItem.addActionListener(menuItemListener);
+	    newActivityMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				SwingUtilities.invokeLater(new Runnable() {
+					
+					@Override
+					public void run() {
+						Activity_form frame =  new Activity_form();
+						frame.setVisible(true);
+					}
+				});
+			}
+		});
 	    
-	    //about menu items action listeners
-	    aboutMenuItem.addActionListener(menuItemListener);
-
+	    editActivityMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				if(DataResource.selectedActivity != null){
+				SwingUtilities.invokeLater(new Runnable() {
+					
+					@Override
+					public void run() {
+						Activity_edit frame =  new Activity_edit();
+						frame.setVisible(true);
+					}
+				});				
+			}else{
+				JOptionPane.showMessageDialog(new JFrame(),
+					    "Activity must be selected before you can edit",
+					    "No Activity Selection",
+					    JOptionPane.WARNING_MESSAGE);
+			}
+			}
+		});
+	    
+	    
 	    //add menu items to menus
 	    projectMenu.add(newProjectMenuItem);
 	    //projectMenu.addSeparator();
 	    projectMenu.add(openProjectMenuItem);
 	    //projectMenu.addSeparator();
 	    projectMenu.add(saveProjectMenuItem);
-	   // projectMenu.addSeparator();
-	    projectMenu.add(deleteProjectMenuItem);
+	    projectMenu.add(editProjectMenuItem);
+	   
 	    //projectMenu.addSeparator();
 	    projectMenu.add(exitMenuItem);
 	    
 	    activityMenu.add(newActivityMenuItem);
 	    //activityMenu.addSeparator();
-	    activityMenu.add(deleteActivityMenuItem);
+	    activityMenu.add(editActivityMenuItem);
+	   
 	    
 	    helpMenu.add(aboutMenuItem);
 	   
-	    //add menu to menubar
+	    //add menu to menu bar
 	    menuBar.add(projectMenu);
 	    menuBar.add(activityMenu);
 	    menuBar.add(helpMenu);
@@ -101,29 +179,7 @@ public class MenuBar extends JMenuBar{
 		return menuBar;
 	}
 
-	private class MenuItemListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {            
-           
-        	//add new project
-        	if(e.getActionCommand()== "New Project")
-        	{
-        		SwingUtilities.invokeLater(new Runnable(){
-
-					@Override
-					public void run() {
-						
-						Project_form frame = new Project_form();
-						frame.setVisible(true);
-						
-					}
-        	});
-        	
-        	if(e.getActionCommand() == "Exit")
-        	{
-        		System.exit(0);
-        	}
-        	
-        }    
-     }
 	
-	}}
+    
+	
+	}

@@ -16,9 +16,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import driver.ClientLauncher;
-import listview_components.ProjectListPane;
 import resources.Users;
 import saver_loader.DataResource;
 
@@ -151,21 +151,27 @@ public class LoginPanel extends JPanel{
 	            	authorizationStatus.setText("login successful");
 	    			authorizationStatus.paintImmediately(authorizationStatus.getVisibleRect());
 	    			
-	    			//create user so that project list 
+	    			// Create Current User 
 	    			DataResource.currentUser = new Users(result.getString(4),result.getString(2),result.getString(3),
 	    					result.getString(5),result.getInt(1),result.getString(6));
 	    			
 	    			DataResource.loadFromDB();
-	    			ProjectListPane.updateList();
 	    			
 	    			try {
 	    			    Thread.sleep(1000);                 //1000 milliseconds is one second.
 	    			} catch(InterruptedException ex) {
 	    			    Thread.currentThread().interrupt();
 	    			}
-	    			ClientLauncher.loginFrame.setVisible(false);
-	    			ClientLauncher.clientFrame.setVisible(true);
+	    			
+	    			ClientLauncher.loginFrame.dispose();
+	    			
+	    			SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							ClientLauncher.launchCLient();
+						}
+					});
 
+	    			
 	            }
 	            else
 	            {

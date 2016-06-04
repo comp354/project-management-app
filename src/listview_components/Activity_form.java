@@ -1,53 +1,37 @@
 package listview_components;
 
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.border.EmptyBorder;
-
 import resources.Activities;
-import resources.Projects;
+import saver_loader.DataResource;
 
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.Color;
+import java.util.ArrayList;
+
 import javax.swing.border.BevelBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.JButton;
 
+@SuppressWarnings("serial")
 public class Activity_form extends JFrame {
 
 	private JPanel contentPane;
-	private JTextField DescField;
-	private JTextField DuraField;
-	private JTextField LabField;
+	private JTextField descriptionField;
+	private JTextField durationField;
+	private JTextField activityLabelField;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					Activity_form frame = new Activity_form();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
-	/**
-	 * Create the frame.
-	 */
+	private ArrayList<String> dependencies = new ArrayList<String>();
+	
+	
 	public Activity_form() {
+		
+		//Initialize JFrame Settings
 		setTitle("ACTIVITY CREATION");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 266, 335);
@@ -56,11 +40,13 @@ public class Activity_form extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		DescField = new JTextField();
-		DescField.setBounds(116, 23, 124, 20);
-		contentPane.add(DescField);
-		DescField.setColumns(10);
-		
+		//Create and add Description Field
+		descriptionField = new JTextField();
+		descriptionField.setBounds(116, 23, 124, 20);
+		descriptionField.setColumns(10);
+		contentPane.add(descriptionField);
+
+		//Create and add all Labels
 		JLabel lblDescription = new JLabel("Description");
 		lblDescription.setBounds(21, 26, 58, 14);
 		contentPane.add(lblDescription);
@@ -77,51 +63,111 @@ public class Activity_form extends JFrame {
 		lblDependencies.setBounds(21, 137, 80, 14);
 		contentPane.add(lblDependencies);
 		
-		String[] selections = { "Boobs", "Cocks", "Your face", "Balls", "Goldorak", "dadasdsd", "dad" };
+		//Create and add all text Fields
+		durationField = new JTextField();
+		durationField.setBounds(116, 61, 58, 20);
+		contentPane.add(durationField);
+		durationField.setColumns(10);
 		
-		JScrollPane scrollPane = new JScrollPane();
+		activityLabelField = new JTextField();
+		activityLabelField.setBounds(116, 100, 58, 20);
+		contentPane.add(activityLabelField);
+		activityLabelField.setColumns(10);
 		
-		DuraField = new JTextField();
-		DuraField.setBounds(116, 61, 58, 20);
-		contentPane.add(DuraField);
-		DuraField.setColumns(10);
 		
-		LabField = new JTextField();
-		LabField.setBounds(116, 100, 58, 20);
-		contentPane.add(LabField);
-		LabField.setColumns(10);
+		//Create an array of the current Activities
+		int activityCount = DataResource.selectedProject.getActivityList().size();
+		Activities[] activityList = new Activities[activityCount];
+		DataResource.selectedProject.getActivityList().toArray(activityList);
 		
+		//Create Selections from the list of Activities and their labels
+		String[] selections = new String[activityCount];
+		
+		for(int i = 0; i < activityCount; i++)			
+			selections[i] = activityList[i].getLabel();
+		
+		//Create list with selections
+		JList<String> selectionList = new JList<String>(selections);
+		
+		//Create ScrollPane with list inside and add to Frame
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setViewportBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		scrollPane_1.setBounds(116, 137, 101, 88);
+		scrollPane_1.setViewportView(selectionList);
+		
 		contentPane.add(scrollPane_1);
 		
-		JList list_1 = new JList(selections);
-		scrollPane_1.setViewportView(list_1);
 		
+		//Initialize and set Buttons
 		JButton btnCancel = new JButton("Cancel");
-		EndingListener buttonEar = new EndingListener();
-		btnCancel.addActionListener(buttonEar);
 		btnCancel.setBounds(28, 252, 89, 23);
 		contentPane.add(btnCancel);
 		
 		JButton btnSave = new JButton("Save");
 		btnSave.setBounds(138, 252, 89, 23);
 		contentPane.add(btnSave);
-	}
-	
-	private void SaveAction () {
-		Activities newActivity = new Activities(DescField.getText(), Double.parseDouble(DuraField.getText()), LabField.getText());
-	}
-	
-	class SaveProject implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			// TODO Auto-generated method stub
-			SaveAction();
+		
+		//Add and define ActionListeners to the buttons
+		
+		btnCancel.addActionListener(new ActionListener() {
 			
-		}
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				disposeWindow();
+			}
+		});
+		
+		btnSave.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				saveAction();
+				ActivityListPane.updateTable(DataResource.selectedProject);
+				disposeWindow();
+			}
+		});
+		
+		//Create the listListener for dependency choices
+		selectionList.addListSelectionListener(new ListSelectionListener() {
+			
+			
+			public void valueChanged(ListSelectionEvent e) {
+
+				if (e.getValueIsAdjusting()) {//This line prevents double events
+	    			
+					dependencies = (ArrayList<String>) selectionList.getSelectedValuesList();
+					
+	    	    }
+			}
+		});
 		
 	}
+	
+	private void saveAction () {
+		
+		//Create activity and add it to current Project
+		Activities newActivity = new Activities(descriptionField.getText(), Double.parseDouble(durationField.getText()), activityLabelField.getText());
+		DataResource.selectedProject.addActivity(newActivity);
+		
+		//Set the dependencies in the JGraphT
+			for(String element : dependencies){
+				
+				ArrayList<Activities> activities = DataResource.selectedProject.getActivityList();
+				
+				for(Activities activity : activities){
+					
+					if(activity.getLabel().equals(element))
+						DataResource.selectedProject.addArrow(activity, newActivity);
+				}
+			}
+		
+		
+				
+	}
+	
+	private void disposeWindow(){
+		this.dispose();
+	}
+	
 }
+
