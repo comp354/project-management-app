@@ -160,9 +160,7 @@ public class Activity_form extends JFrame {
 						DataResource.selectedProject.addArrow(activity, newActivity);
 				}
 			}
-		
-		
-				
+		DataResource.saveToDB();		
 	}
 	
 	private void disposeWindow(){

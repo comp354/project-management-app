@@ -123,7 +123,7 @@ public class Project_form extends JFrame {
         
         ProjectListPane.updateList();
         this.dispose();
-                
+        DataResource.saveToDB(); 
     }
 	
 	private void disposeWindow(){

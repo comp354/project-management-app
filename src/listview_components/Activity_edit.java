@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
+
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -84,14 +85,21 @@ public class Activity_edit extends JFrame {
 		//Create Selections from the list of Activities and their labels
 		String[] selections = new String[activityCount];
 		
+		//Get the currently selected dependencies for this activity
+		ArrayList<Activities> currentSelections = DataResource.selectedProject.getSetofDependencyActivities(DataResource.selectedActivity);
+		
+		
 		for(int i = 0; i < activityCount; i++){			
 			if(!DataResource.selectedActivity.getLabel().equals(activityList[i].getLabel()))
 				selections[i] = activityList[i].getLabel();
 			}
+		
+		
 		//Create ScrollPane with list inside and add to Frame
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setViewportBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		scrollPane_1.setBounds(226, 155, 101, 88);
+		
 		
 		contentPane.add(scrollPane_1);
 		
@@ -108,7 +116,26 @@ public class Activity_edit extends JFrame {
 		//Create list with selections
 		JList<String> selectionList = new JList<String>(selections);
 		selectionList.setBounds(232, 172, 95, 82);
+		
+		//Set the default selections to current dependent activities
+		int[] selectedIndices = new int[currentSelections.size()];
+		for(int i = 0; i < currentSelections.size(); i++)
+		{
+			for(int j = 0; j < activityList.length; j++)
+			{
+				if(currentSelections.get(i).getId() == activityList[j].getId())
+					selectedIndices[i] = j;
+			}
+		}
+		selectionList.setSelectedIndices(selectedIndices);
 		contentPane.add(selectionList);
+		
+				
+		//Add to viewport
+		scrollPane_1.setViewportView(selectionList);
+		
+		
+		
 		
 		JLabel lblDoYouWant = new JLabel("Do you want to delete?");
 		lblDoYouWant.setBounds(64, 351, 124, 23);
@@ -192,6 +219,7 @@ public class Activity_edit extends JFrame {
 				}
 		
 		}
+		DataResource.saveToDB();
 				
 	}
 	
