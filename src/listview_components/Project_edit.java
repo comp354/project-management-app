@@ -59,17 +59,17 @@ public class Project_edit extends JFrame {
 		contentPane.add(Budget);
 		
 		//Initialize and create Text Fields
-		nameField = new JTextField();
+		nameField = new JTextField(DataResource.selectedProject.getProjectName());
 		nameField.setBounds(139, 67, 147, 20);
 		contentPane.add(nameField);
 		nameField.setColumns(10);
 		
-		descriptionField = new JTextField();
+		descriptionField = new JTextField(DataResource.selectedProject.getDescription());
 		descriptionField.setBounds(139, 123, 147, 20);
 		contentPane.add(descriptionField);
 		descriptionField.setColumns(10);
 		
-		BudgetField = new JTextField();
+		BudgetField = new JTextField(Double.toString(DataResource.selectedProject.getBudget()));
 		BudgetField.setBounds(139, 179, 147, 20);
 		contentPane.add(BudgetField);
 		BudgetField.setColumns(10);
@@ -137,7 +137,7 @@ public class Project_edit extends JFrame {
 		myProject.setBudget(Double.parseDouble(BudgetField.getText()));
 		DataResource.saveToDB();//save the new project to the database
        
-        //ProjectListPane.updateList(); TODO Update list with new name if there is a change
+        ProjectListPane.updateList();
                 
     }
 	

@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -14,18 +13,47 @@ import resources.Activities;
 import resources.Projects;
 import resources.Users;
 
+/** 
+ * The DataResource class is used to store and manipulate the application data in the current instance of execution.
+ * The class contains static variables that are used to define the current instance of the data.
+ * 
+ * projectList contains a list of current projects loaded from the database. 
+ * This list can be modified by the user, and all changes are saved to the database.
+ * 
+ * currentUser defines the user that is currently logged in. Only projects associated with this user are displayed.
+ * 
+ * selectedProject defines the currently active Project selected by the user. Modifications are made to this Project.
+ * 
+ * selectedActivity defines the currently active Activity selected by the user. Modifications are made to this Activity
+ * 
+ * The class also contains methods to make saves and loads to and from the database.
+ * 
+ * @author daveT
+ *
+ */
 
 public class DataResource {
 
+	// current active projects loaded
 	public static ArrayList<Projects> projectList = new ArrayList<Projects>();
 	
-	public static Users currentUser; //this is the currently logged in user for which the projetList will be populated
+	//this is the currently logged in user for which the projetList will be populated
+	public static Users currentUser; 
 	
+	// current selected project by user
 	public static Projects selectedProject;
 	
+	// current selected activity by user
 	public static Activities selectedActivity;
 	
+	public static String dataBase = "jdbc:sqlite:ultimate_sandwich.db";
 	
+	/**
+	 * Method used to retreive a project given a projectID passed in parameters.
+	 * Project must be contained in the projectList.
+	 * @param projectId the id we wish to find the project for
+	 * @return the Project with the given id, if it exists. Returns null otherwise.
+	 */
 	public static Projects getProjectbyProjectId(int projectId){
 		
 		for(Projects project: projectList){
@@ -36,112 +64,153 @@ public class DataResource {
 		return null;
 	}
 	
-public static Projects getProjectbyProjectName(String name){
-        
-        for(Projects project: projectList){
-            
-            if(project.getProjectName() == name)
-                return project;
-        }
-        return null;
-    }
+	/**
+	 * Method used to retreive a project by projectName given a string passed in parameters.
+	 * Project must be contained in the projectList.
+	 * @param name the name we wish to find the project for
+	 * @return the Project with the given name, if it exists. Returns null otherwise.
+	 */
+	public static Projects getProjectbyProjectName(String name){
 
-public static void removeProject(Projects project)
-{
-	projectList.remove(project);//removes project from projectList
-	
-	//query database and remove project
-	Connection connection = null;
-	String sql;
-	try{
-    	connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
-    	Statement stmt = connection.createStatement();
-    	sql = ("DELETE FROM projects WHERE id="+project.getId());
-    	stmt.executeQuery(sql);
-    	
-    	ArrayList<Activities> actList = project.getActivityList();
-    	
-    	for(Activities acts: actList)
-    	{
-    		sql = ("DELETE FROM activities WHERE id="+acts.getId());
-    		stmt.executeQuery(sql);
-    	}
-    	
-    	
-	}catch(Exception exception) {
-    	System.out.println(exception.getMessage());
-    }
+		for(Projects project: projectList){
 
-	//close connection at end
-	try{
-    	connection.close();
-    }catch(Exception closingException)
-    {
-    	System.out.println(closingException.getMessage());
-    }
-	
-}
+			if(project.getProjectName() == name)
+				return project;
+		}
+		return null;
+	}
 
-public static void deleteActivity(Activities A)
-{
-	Connection connection = null;
-	String sql;
-	
-	try{
-    	connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
-    	Statement stmt = connection.createStatement();
-    	//delete activity from activities table in database
-    	sql = ("DELETE FROM activities WHERE id="+A.getId());
-    	stmt.executeUpdate(sql);
-    	
-    	//delete activity from activity_project_relationships in database
-		sql = ("DELETE FROM activity_project_relationships WHERE activity_id="+A.getId());
-		stmt.executeUpdate(sql);
-		
-		//delete activity from activity_edge_relationship in database
-    	sql = ("DELETE FROM activity_edge_relationship WHERE from_activity_id="+A.getId());
-    	stmt.executeUpdate(sql);
-    	
-	}catch(Exception exception) {
-    	System.out.println(exception.getMessage());
-    }
+	/**
+	 * This method removes the Project passed as parameters from the database.
+	 * All associated entries in Activities and relationship tables are removed as well.
+	 * The project is also removed from the projectList. 
+	 * @param project Project we wish to delete
+	 */
+	public static void removeProject(Projects project)
+	{
+		projectList.remove(project);//removes project from projectList
 
-	//close connection at end
-	try{
-    	connection.close();
-    }catch(Exception closingException)
-    {
-    	System.out.println(closingException.getMessage());
-    }
-}
+		//query database and remove project
+		Connection connection = null;
+		String sql;
+		PreparedStatement statement;
 
-public static void deleteEdgeFromDB(int activityBefore, int activityAfter) {
-Connection connection = null;
-String sql;
-	
-	try{
-    	connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
-    	
-    	// Delete edge in database between the activityBefore and activityAfter
-    	Statement stmt = connection.createStatement();
-    	sql = ("DELETE FROM activity_edge_relationship WHERE from_activity_id="+activityBefore+" AND to_activity_id="+activityAfter);
-    	stmt.executeQuery(sql);
-    	
-	}catch(Exception exception) {
-    	System.out.println(exception.getMessage());
-    }
+		try{
+			connection = DriverManager.getConnection(dataBase);
+			// delete the project
+			// cascade takes care of associated tuples in other tables
+			sql = ("DELETE FROM projects WHERE id="+project.getId());
+			statement = connection.prepareStatement(sql);
+			statement.executeUpdate();
 
-	//close connection at end
-	try{
-    	connection.close();
-    }catch(Exception closingException)
-    {
-    	System.out.println(closingException.getMessage());
-    }
-}
+			ArrayList<Activities> actList = project.getActivityList();
+
+			// delete the activities associated with this project
+			// cascade takes care of associated tuples in other tables
+			for(Activities acts: actList)
+			{
+				sql = ("DELETE FROM activities WHERE id="+acts.getId());
+				statement = connection.prepareStatement(sql);
+				statement.executeUpdate();
+			}
 
 
-	
+		}catch(Exception exception) {
+			System.out.println(exception.getMessage());
+		}
+
+		//close connection at end
+		try{
+			connection.close();
+		}catch(Exception closingException)
+		{
+			System.out.println(closingException.getMessage());
+		}
+
+	}
+
+	/**
+	 * This method deletes the Activity passed as parameters from the database
+	 * All associated tuples in other tables are also removed.
+	 * @param A Activity we wish to delete
+	 */
+	public static void deleteActivity(Activities A)
+	{
+		Connection connection = null;
+		String sql;
+		PreparedStatement statement;
+
+		try{
+			connection = DriverManager.getConnection(dataBase);
+			//delete activity from activities table in database
+			sql = ("DELETE FROM activities WHERE id="+A.getId());
+			statement = connection.prepareStatement(sql);
+			statement.executeUpdate();
+
+			//delete activity from activity_project_relationships in database
+			sql = ("DELETE FROM activity_project_relationships WHERE activity_id="+A.getId());
+			statement = connection.prepareStatement(sql);
+			statement.executeUpdate();
+
+			//delete activity from activity_edge_relationship in database
+			sql = ("DELETE FROM activity_edge_relationship WHERE from_activity_id="+A.getId());
+			statement = connection.prepareStatement(sql);
+			statement.executeUpdate();
+
+		}catch(Exception exception) {
+			System.out.println(exception.getMessage());
+		}
+
+		//close connection at end
+		try{
+			connection.close();
+		}catch(Exception closingException)
+		{
+			System.out.println(closingException.getMessage());
+		}
+	}
+
+	/**
+	 * This method is used to delete an association between 2 Activities from the database.
+	 * Given 2 integers representing Activity ID's, the method queries the database and removes the corresponding tuple.
+	 * The result is that the Activities will no longer have an association between them.
+	 * @param activityBefore Activity ID for the origin Activity who's edge is to be removed
+	 * @param activityAfter Activity ID for the destination Activity who's edge is to be removed
+	 */
+	public static void deleteEdgeFromDB(int activityBefore, int activityAfter) {
+		Connection connection = null;
+		String sql;
+		PreparedStatement statement;
+
+
+		try{
+			connection = DriverManager.getConnection(dataBase);
+
+			// Delete edge in database between the activityBefore and activityAfter
+			sql = ("DELETE FROM activity_edge_relationship WHERE from_activity_id="+activityBefore+" AND to_activity_id="+activityAfter);
+			statement = connection.prepareStatement(sql);
+			statement.executeUpdate();
+
+		}catch(Exception exception) {
+			System.out.println(exception.getMessage());
+		}
+
+		//close connection at end
+		try{
+			connection.close();
+		}catch(Exception closingException)
+		{
+			System.out.println(closingException.getMessage());
+		}
+	}
+
+
+	/**
+	 * Method is used to load from database.
+	 * The method builds each project associated with the current User ID logged into the system.
+	 * Each project is build, with it's Activities and dependencies added, and the result is populated in the projectList static variable.
+	 * 
+	 */
 	public static void loadFromDB()
 	{
 		//query user_project_relationship
@@ -151,7 +220,7 @@ String sql;
         PreparedStatement ps;
         
         try{
-        	connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
+        	connection = DriverManager.getConnection(dataBase);
         	
         	//set projectCount to max project id from database
         	
@@ -307,14 +376,19 @@ String sql;
 	}
 	
 	/** 
-	 * Loops through projectList and inserts projects, users, activities, dependencies to database 
+	 * This method is used to save changes to the database.
+	 * The current instance of projectList, which contains all changes the user has made, is iterated.
+	 * All new values are inserted, and any changed values replace their associated tuples.
+	 * Loops through projectList and inserts projects, users, activities, dependencies to database.
 	 * */
 	public static void saveToDB()
 	{
 		Connection connection = null;
-		Statement stmt = null;
+		PreparedStatement statement;
+
+		
 		try{
-        	connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
+        	connection = DriverManager.getConnection(dataBase);
 
     		String projectName, description, date;
     		int projectID, managerID;
@@ -330,11 +404,16 @@ String sql;
     			managerID = projects.getManagerID();
     			budget = projects.getBudget();
     		
-    			stmt = connection.createStatement();
     			String sql = ("INSERT OR REPLACE INTO projects(id, name, date, description, budget, manager_id) "
-    					+ "VALUES (" + projectID + ", '" + projectName + "', '" + date + "', '" + description + "', " + budget + "," + managerID+");");
-    			stmt.executeUpdate(sql);
-    			
+    					+ "VALUES (?, ?, ?, ?, ?, ?)");
+    			statement = connection.prepareStatement(sql);
+    			statement.setInt(1, projectID);
+    			statement.setString(2, projectName);
+    			statement.setString(3, date);
+    			statement.setString(4, description);
+    			statement.setDouble(5, budget);
+    			statement.setInt(6, managerID);
+    			statement.executeUpdate();    			
     			
     			int userID;
     			//for each project, insert the list of users associated with that project into the database
@@ -342,9 +421,12 @@ String sql;
     			{
     				userID = user.getID();
     				sql = ("INSERT OR REPLACE INTO user_project_relationships(project_id, user_id) VALUES "
-    						+ "(" + projectID + ", " + userID + ")");
-    				stmt.executeUpdate(sql);
-    			}
+    						+ "(?, ?)");
+    				statement = connection.prepareStatement(sql);
+    				statement.setInt(1, projectID);
+    				statement.setInt(2, userID);
+    		    	statement.executeUpdate();
+    		    }
     			
     			//for each project, insert the list of activities associated with that project into the database
     			int activityID, dependentActivityID;
@@ -360,12 +442,20 @@ String sql;
     				duration = activity.getDuration();
     				
     				sql = ("INSERT OR REPLACE INTO activities(id, label, description, duration) VALUES "
-    						+ "(" + activityID + ", '" + actLabel + "','" + actDescription +"', "+duration +")");
-    				stmt.executeUpdate(sql);
+    						+ "(?, ?, ?, ?)");
+    				statement = connection.prepareStatement(sql);
+    				statement.setInt(1, activityID);
+    				statement.setString(2, actLabel);
+    				statement.setString(3, actDescription);
+    				statement.setDouble(4, duration);
+    		    	statement.executeUpdate();
     				
     				sql = ("INSERT OR REPLACE INTO activity_project_relationships(project_id, activity_id) VALUES "
-    						+ "(" + projectID + ", " + activityID + ")");
-    				stmt.executeUpdate(sql);
+    						+ "(?, ?)");
+    				statement = connection.prepareStatement(sql);
+    				statement.setInt(1, projectID);
+    				statement.setInt(2, activityID);
+    		    	statement.executeUpdate();
     				
     				Set<DefaultEdge> edges = projects.getArrowSet();
     				//for currently selected activity, add all the edges to activity_edge_relationship
@@ -376,8 +466,11 @@ String sql;
     						dependentActivityID = projects.getActivityAfter(e).getId();
     						//if the activityID is a before edge, put the before and after edge into table under  from_activity_id and  to_activity_id
     						sql = ("INSERT OR REPLACE INTO activity_edge_relationship(from_activity_id, to_activity_id) VALUES "
-    	    						+ "(" + activityID + ", " + dependentActivityID + ")");
-    						stmt.executeUpdate(sql);
+    	    						+ "(?, ?)");
+    						statement = connection.prepareStatement(sql);
+    						statement.setInt(1, activityID);
+    						statement.setInt(2, dependentActivityID);
+    				    	statement.executeUpdate();
     					}
     				}
     			}
@@ -396,6 +489,15 @@ String sql;
         {
         	System.out.println(closingException.getMessage());
         }
+	}
+	
+	/**
+	 * Method used to set the Database to the supplied string
+	 * @param db String with filename of new Database
+	 */
+	public static void setDatabase(String db)
+	{
+		dataBase = db;
 	}
 	
 }

@@ -25,20 +25,18 @@ public class MenuBar extends JMenuBar{
 	    //create menus
 	    JMenu projectMenu = new JMenu("Projects");
 	    JMenu activityMenu = new JMenu("Activities");
-	    JMenu helpMenu = new JMenu("Help");
+	    
 	  
 	    //create project menu items
 	    JMenuItem newProjectMenuItem = new JMenuItem("New");
 	    newProjectMenuItem.setActionCommand("New Project");
 
-	    JMenuItem openProjectMenuItem = new JMenuItem("Open");
-	    openProjectMenuItem.setActionCommand("Open");
-
-	    JMenuItem saveProjectMenuItem = new JMenuItem("Save");
-	    saveProjectMenuItem.setActionCommand("Save");
+	    
+	    //JMenuItem saveProjectMenuItem = new JMenuItem("Save");
+	    //saveProjectMenuItem.setActionCommand("Save");
 	    
 	    JMenuItem editProjectMenuItem = new JMenuItem("Edit");
-	    saveProjectMenuItem.setActionCommand("ProjectEdit");
+	    editProjectMenuItem.setActionCommand("ProjectEdit");
 	    
 	    
 	    JMenuItem exitMenuItem = new JMenuItem("Exit");
@@ -53,12 +51,6 @@ public class MenuBar extends JMenuBar{
 	    
 	   
 	    
-	    //about menu items
-	    JMenuItem aboutMenuItem = new JMenuItem("About");
-	    aboutMenuItem.setActionCommand("About");
-
-	   
-
 	    //project menu items action listeners
 	    newProjectMenuItem.addActionListener(new ActionListener() {
 			
@@ -114,16 +106,27 @@ public class MenuBar extends JMenuBar{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				SwingUtilities.invokeLater(new Runnable() {
+			
+				if(DataResource.selectedProject != null){
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
+							Activity_form frame =  new Activity_form();
+							frame.setVisible(true);
+						}
+					});				
+				}else{
+					JOptionPane.showMessageDialog(new JFrame(),
+						    "Must have a selected Project before trying to add new Activity!",
+						    "No Project Selected",
+						    JOptionPane.WARNING_MESSAGE);
 					
-					@Override
-					public void run() {
-						Activity_form frame =  new Activity_form();
-						frame.setVisible(true);
-					}
-				});
+				}
+				
 			}
 		});
+
 	    
 	    editActivityMenuItem.addActionListener(new ActionListener() {
 			
@@ -152,9 +155,7 @@ public class MenuBar extends JMenuBar{
 	    //add menu items to menus
 	    projectMenu.add(newProjectMenuItem);
 	    //projectMenu.addSeparator();
-	    projectMenu.add(openProjectMenuItem);
-	    //projectMenu.addSeparator();
-	    projectMenu.add(saveProjectMenuItem);
+	    //projectMenu.add(saveProjectMenuItem);
 	    projectMenu.add(editProjectMenuItem);
 	   
 	    //projectMenu.addSeparator();
@@ -165,12 +166,10 @@ public class MenuBar extends JMenuBar{
 	    activityMenu.add(editActivityMenuItem);
 	   
 	    
-	    helpMenu.add(aboutMenuItem);
 	   
 	    //add menu to menu bar
 	    menuBar.add(projectMenu);
 	    menuBar.add(activityMenu);
-	    menuBar.add(helpMenu);
 	    
 	    
 	}
