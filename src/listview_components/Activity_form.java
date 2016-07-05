@@ -4,6 +4,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import resources.Activities;
+import resources.Users;
 import saver_loader.DataResource;
 
 import javax.swing.JTextField;
@@ -27,6 +28,7 @@ public class Activity_form extends JFrame {
 	private JTextField activityLabelField;
 
 	private ArrayList<String> dependencies = new ArrayList<String>();
+	private ArrayList<String> members = new ArrayList<String>();
 	
 	
 	public Activity_form() {
@@ -34,7 +36,7 @@ public class Activity_form extends JFrame {
 		//Initialize JFrame Settings
 		setTitle("ACTIVITY CREATION");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 266, 335);
+		setBounds(100, 100, 266, 435);
 		contentPane = new JPanel();
 		contentPane.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		setContentPane(contentPane);
@@ -62,6 +64,10 @@ public class Activity_form extends JFrame {
 		JLabel lblDependencies = new JLabel("Dependencies");
 		lblDependencies.setBounds(21, 137, 80, 14);
 		contentPane.add(lblDependencies);
+		
+		JLabel lblResources = new JLabel("Resources");
+		lblResources.setBounds(21, 247, 80, 14);
+		contentPane.add(lblResources);
 		
 		//Create and add all text Fields
 		durationField = new JTextField();
@@ -97,14 +103,29 @@ public class Activity_form extends JFrame {
 		
 		contentPane.add(scrollPane_1);
 		
+		String[] memberNames = new String[DataResource.projectMembers.size()];
+		
+		for(int i = 0; i < DataResource.projectMembers.size(); i++) {
+			memberNames[i] = DataResource.projectMembers.get(i).getName();
+		}
+		JList<String> memberList = new JList<String>(memberNames);
+		//Create ScrollPane with list inside and add to Frame
+		JScrollPane scrollPane_2 = new JScrollPane();
+		scrollPane_2.setViewportBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		scrollPane_2.setBounds(116, 247, 101, 88);
+		scrollPane_2.setViewportView(memberList);
+		
+		
+		
+		contentPane.add(scrollPane_2);
 		
 		//Initialize and set Buttons
 		JButton btnCancel = new JButton("Cancel");
-		btnCancel.setBounds(28, 252, 89, 23);
+		btnCancel.setBounds(28, 352, 89, 23);
 		contentPane.add(btnCancel);
 		
 		JButton btnSave = new JButton("Save");
-		btnSave.setBounds(138, 252, 89, 23);
+		btnSave.setBounds(138, 352, 89, 23);
 		contentPane.add(btnSave);
 		
 		//Add and define ActionListeners to the buttons
@@ -142,6 +163,16 @@ public class Activity_form extends JFrame {
 			}
 		});
 		
+		//Create the listListener for member choices
+		memberList.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (e.getValueIsAdjusting()) {//This line prevents double events
+					members = (ArrayList<String>) memberList.getSelectedValuesList();
+				}
+			}
+		});
+		
 	}
 	
 	private void saveAction () {
@@ -161,6 +192,17 @@ public class Activity_form extends JFrame {
 						DataResource.selectedProject.addArrow(activity, newActivity);
 				}
 			}
+		
+		ArrayList<Users> users = DataResource.projectMembers;
+		ArrayList<Users> tmp = new ArrayList<Users>();
+		
+		for(String element : members) {
+			for(Users user : users) {
+				if(user.getName().equals(element))
+					tmp.add(user);
+			}
+		}
+		newActivity.setMemberList(tmp);
 		DataResource.saveToDB();		
 	}
 	

@@ -1,5 +1,7 @@
 package resources;
 
+import java.util.ArrayList;
+
 /**
  * Activities class:
  * 
@@ -17,7 +19,7 @@ package resources;
  */
 
 public class Activities {
-
+	
 	private static int activityCount = 0;
 	private int id;
 	private String label;
@@ -25,6 +27,7 @@ public class Activities {
 	private double duration;
 	private double xpos, ypos;
 	private double earliestStart, earliestFinish, latestStart, latestFinish, activityFloat, maxDuration;
+	private ArrayList<Users> memberList;
 	
 	/**
 	 * Default Constructor. 
@@ -42,6 +45,7 @@ public class Activities {
 		this.latestFinish = -1;
 		this.activityFloat = -1;
 		this.maxDuration = -1;
+		this.memberList = null;
 	}
 	
 	/**
@@ -67,6 +71,7 @@ public class Activities {
 		this.maxDuration = 0;
 		xpos =0;
 		ypos=0;
+		this.memberList = new ArrayList<Users>();
 	}
 	
 	/**
@@ -92,6 +97,7 @@ public class Activities {
 		this.maxDuration = 0;
 		xpos =0;
 		ypos=0;
+		this.memberList = new ArrayList<Users>();
 	}
 
 	/**
@@ -302,8 +308,19 @@ public class Activities {
 		this.maxDuration = maxDuration;
 	}
 	
-	
-	
-	
-	
+	/**
+	 * Getter for memberList
+	 * @return the memberList
+	 */
+	public ArrayList<Users> getMemberList() {
+		return memberList;
+	}
+
+	/**
+	 * Setter for activityList
+	 * @param activityList the activityList to set
+	 */
+	public void setMemberList(ArrayList<Users> memberList) {
+		this.memberList = memberList;
+	}
 }

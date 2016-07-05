@@ -4,6 +4,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import resources.Activities;
+import resources.Users;
 import saver_loader.DataResource;
 
 import javax.swing.JTextField;
@@ -28,6 +29,7 @@ public class Activity_edit extends JFrame {
 	private JTextField activityLabelField;
 
 	private ArrayList<String> dependencies = new ArrayList<String>();
+	private ArrayList<String> members = new ArrayList<String>();
 	
 	
 	public Activity_edit() {
@@ -35,7 +37,7 @@ public class Activity_edit extends JFrame {
 		//Initialize JFrame Settings
 		setTitle("EDITING");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 426, 442);
+		setBounds(100, 100, 426, 542);
 		contentPane = new JPanel();
 		contentPane.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		setContentPane(contentPane);
@@ -63,6 +65,10 @@ public class Activity_edit extends JFrame {
 		JLabel lblDependencies = new JLabel("Dependencies");
 		lblDependencies.setBounds(64, 173, 80, 14);
 		contentPane.add(lblDependencies);
+		
+		JLabel lblResources = new JLabel("Resources");
+		lblResources.setBounds(64, 273, 80, 14);
+		contentPane.add(lblResources);
 		
 		//Create and add all text Fields
 		Double initialDuration =  new Double(DataResource.selectedActivity.getDuration());
@@ -100,18 +106,7 @@ public class Activity_edit extends JFrame {
 		scrollPane_1.setViewportBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		scrollPane_1.setBounds(226, 155, 101, 88);
 		
-		
 		contentPane.add(scrollPane_1);
-		
-		
-		//Initialize and set Buttons
-		JButton btnCancel = new JButton("Cancel");
-		btnCancel.setBounds(64, 299, 89, 23);
-		contentPane.add(btnCancel);
-		
-		JButton btnSave = new JButton("Save");
-		btnSave.setBounds(238, 299, 89, 23);
-		contentPane.add(btnSave);
 		
 		//Create list with selections
 		JList<String> selectionList = new JList<String>(selections);
@@ -130,19 +125,56 @@ public class Activity_edit extends JFrame {
 		selectionList.setSelectedIndices(selectedIndices);
 		contentPane.add(selectionList);
 		
-				
 		//Add to viewport
 		scrollPane_1.setViewportView(selectionList);
 		
+		ArrayList<Users> currentMembers = DataResource.selectedActivity.getMemberList();
+		String[] memberNames = new String[DataResource.projectMembers.size()];
 		
+		for(int i = 0; i < DataResource.projectMembers.size(); i++) {
+			memberNames[i] = DataResource.projectMembers.get(i).getName();
+		}
 		
+		//Create ScrollPane with list inside and add to Frame
+		JScrollPane scrollPane_2 = new JScrollPane();
+		scrollPane_2.setViewportBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		scrollPane_2.setBounds(226, 265, 101, 88);
+				
+		contentPane.add(scrollPane_2);
+		
+		JList<String> memberList = new JList<String>(memberNames);
+		memberList.setBounds(232, 172, 95, 82);
+		
+		int[] memberIndices = new int[currentMembers.size()];
+		for(int i = 0; i < currentMembers.size(); i++)
+		{
+			for(int j = 0; j < DataResource.projectMembers.size(); j++)
+			{
+				if(currentMembers.get(i).getID() == DataResource.projectMembers.get(j).getID())
+					memberIndices[i] = j;
+			}
+		}
+		
+		memberList.setSelectedIndices(memberIndices);
+		contentPane.add(memberList);
+		
+		scrollPane_2.setViewportView(memberList);
+		
+		//Initialize and set Buttons
+		JButton btnCancel = new JButton("Cancel");
+		btnCancel.setBounds(64, 399, 89, 23);
+		contentPane.add(btnCancel);
+		
+		JButton btnSave = new JButton("Save");
+		btnSave.setBounds(238, 399, 89, 23);
+		contentPane.add(btnSave);
 		
 		JLabel lblDoYouWant = new JLabel("Do you want to delete?");
-		lblDoYouWant.setBounds(64, 351, 124, 23);
+		lblDoYouWant.setBounds(64, 451, 124, 23);
 		contentPane.add(lblDoYouWant);
 		
 		JButton btnDelete = new JButton("Delete");
-		btnDelete.setBounds(238, 351, 89, 23);
+		btnDelete.setBounds(238, 451, 89, 23);
 		contentPane.add(btnDelete);
 		
 		//Create the listListener for dependency choices
@@ -157,6 +189,16 @@ public class Activity_edit extends JFrame {
 					dependencies = (ArrayList<String>) selectionList.getSelectedValuesList();
 					
 	    	    }
+			}
+		});
+		
+		//Create the listListener for member choices
+		memberList.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (e.getValueIsAdjusting()) {//This line prevents double events
+					members = (ArrayList<String>) memberList.getSelectedValuesList();
+				}
 			}
 		});
 		
@@ -218,7 +260,20 @@ public class Activity_edit extends JFrame {
 							DataResource.selectedProject.addArrow(activity, myActivity);
 					}
 				}
+		}
 		
+		if(!members.isEmpty()) {
+			DataResource.resetActivityMembers(DataResource.selectedActivity.getId());
+			ArrayList<Users> users = DataResource.projectMembers;
+			ArrayList<Users> tmp = new ArrayList<Users>();
+			
+			for(String element : members) {
+				for(Users user : users) {
+					if(user.getName().equals(element))
+						tmp.add(user);
+				}
+			}
+			DataResource.selectedActivity.setMemberList(tmp);
 		}
 		DataResource.saveToDB();
 				

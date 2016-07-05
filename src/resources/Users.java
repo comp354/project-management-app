@@ -68,7 +68,7 @@ public class Users {
 			this.type = userType.ADMIN;
 			break;
 		}
-		case "MEMEBER":
+		case "MEMBER":
 		{
 			this.type = userType.MEMBER;
 			break;
