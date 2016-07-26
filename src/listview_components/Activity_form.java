@@ -1,15 +1,11 @@
 package listview_components;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
+
 import resources.Activities;
 import resources.Users;
 import saver_loader.DataResource;
 
-import javax.swing.JTextField;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DateFormat;
@@ -20,7 +16,6 @@ import java.util.Date;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.JButton;
 
 @SuppressWarnings("serial")
 public class Activity_form extends JFrame {
@@ -45,6 +40,12 @@ public class Activity_form extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
+        // Create and add Name Field
+        activityLabelField = new JTextField();
+        activityLabelField.setBounds(116, 120, 58, 20);
+        contentPane.add(activityLabelField);
+        activityLabelField.setColumns(10);
+
 		// Create and add Description Field
 		descriptionField = new JTextField();
 		descriptionField.setBounds(116, 23, 124, 20);
@@ -52,28 +53,28 @@ public class Activity_form extends JFrame {
 		contentPane.add(descriptionField);
 
 		// Create and add all Labels
+        JLabel lblLabel = new JLabel("Name");
+        lblLabel.setBounds(21, 26, 160, 14);
+        contentPane.add(lblLabel);
+
 		JLabel lblDescription = new JLabel("Description");
-		lblDescription.setBounds(21, 26, 58, 14);
+		lblDescription.setBounds(21, 123, 160, 14);
 		contentPane.add(lblDescription);
 
 		JLabel lblStart = new JLabel("Start Date (DD-MM-YYYY)");
-		lblStart.setBounds(21, 64, 46, 14);
+		lblStart.setBounds(21, 64, 170, 14);
 		contentPane.add(lblStart);
 
 		JLabel lblEnd = new JLabel("End Date (DD-MM-YYYY)");
-		lblEnd.setBounds(21, 94, 46, 14);
+		lblEnd.setBounds(21, 94, 170, 14);
 		contentPane.add(lblEnd);
 
-		JLabel lblLabel = new JLabel("Label");
-		lblLabel.setBounds(21, 123, 46, 14);
-		contentPane.add(lblLabel);
-
 		JLabel lblDependencies = new JLabel("Dependencies");
-		lblDependencies.setBounds(21, 157, 80, 14);
+		lblDependencies.setBounds(21, 157, 160, 14);
 		contentPane.add(lblDependencies);
 
 		JLabel lblResources = new JLabel("Resources");
-		lblResources.setBounds(21, 267, 80, 14);
+		lblResources.setBounds(21, 267, 160, 14);
 		contentPane.add(lblResources);
 
 		// Create and add all text Fields
@@ -88,10 +89,7 @@ public class Activity_form extends JFrame {
 		contentPane.add(endField);
 		endField.setColumns(10);
 
-		activityLabelField = new JTextField();
-		activityLabelField.setBounds(116, 120, 58, 20);
-		contentPane.add(activityLabelField);
-		activityLabelField.setColumns(10);
+
 
 		// Create an array of the current Activities
 		int activityCount = DataResource.selectedProject.getActivityList().size();
@@ -192,39 +190,54 @@ public class Activity_form extends JFrame {
 			Date start = dateFormatter.parse(startField.getText());
 			Date end = dateFormatter.parse(endField.getText());
 
-			// Create activity and add it to current Project
-			Activities newActivity = new Activities(descriptionField.getText(), start, end,
-					activityLabelField.getText());
-			DataResource.selectedProject.addActivity(newActivity);
+            if (start.before(end))
+            {
+                // Create activity and add it to current Project
+                Activities newActivity = new Activities(descriptionField.getText(), start, end,
+                        activityLabelField.getText());
+                DataResource.selectedProject.addActivity(newActivity);
 
-			// Set the dependencies in the JGraphT
-			for (String element : dependencies) {
+                // Set the dependencies in the JGraphT
+                for (String element : dependencies) {
 
-				ArrayList<Activities> activities = DataResource.selectedProject.getActivityList();
+                    ArrayList<Activities> activities = DataResource.selectedProject.getActivityList();
 
-				for (Activities activity : activities) {
+                    for (Activities activity : activities) {
 
-					if (activity.getLabel().equals(element))
-						DataResource.selectedProject.addArrow(activity, newActivity);
-				}
-			}
+                        if (activity.getLabel().equals(element))
+                            DataResource.selectedProject.addArrow(activity, newActivity);
+                    }
+                }
 
-			ArrayList<Users> users = DataResource.projectMembers;
-			ArrayList<Users> tmp = new ArrayList<Users>();
+                ArrayList<Users> users = DataResource.projectMembers;
+                ArrayList<Users> tmp = new ArrayList<Users>();
 
-			for (String element : members) {
-				for (Users user : users) {
-					if (user.getName().equals(element))
-						tmp.add(user);
-				}
-			}
-			newActivity.setMemberList(tmp);
-			
-			//***************************** SAVE NEW ACTIVITY TO DATABASE **********************
-			DataResource.saveActivity(newActivity);
-			//DataResource.saveToDB();
+                for (String element : members) {
+                    for (Users user : users) {
+                        if (user.getName().equals(element))
+                            tmp.add(user);
+                    }
+                }
+                newActivity.setMemberList(tmp);
+
+                //***************************** SAVE NEW ACTIVITY TO DATABASE **********************
+                DataResource.saveActivity(newActivity);
+                //DataResource.saveToDB();
+            }
+            else
+            {
+                JOptionPane.showMessageDialog(new JFrame(),
+                        "End date must be AFTER start date",
+                        "Incorrect Dates",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+
+
 		} catch (Exception exception) {
-			System.out.println(exception.getMessage());
+                JOptionPane.showMessageDialog(new JFrame(),
+                        "Please fill in all values",
+                        "Values are Empty",
+                        JOptionPane.WARNING_MESSAGE);
 		}
 	}
 

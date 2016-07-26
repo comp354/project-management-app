@@ -43,9 +43,9 @@ public class ActivityListPane extends JPanel implements MouseListener {
 		//Set Basic Table Options
 		table.setModel(mod);
 		table.setFillsViewportHeight(true);
-		table.setFont(table.getFont().deriveFont(fontScalar*30f));
+		table.setFont(table.getFont().deriveFont(fontScalar*25f));
 		table.setRowHeight(35);
-		table.getTableHeader().setFont(table.getFont().deriveFont(40f));
+		table.getTableHeader().setFont(table.getFont().deriveFont(21f));
 		table.addMouseListener(this);
 		table.setRowSelectionAllowed(true);
 		table.setEnabled(true);
@@ -55,7 +55,7 @@ public class ActivityListPane extends JPanel implements MouseListener {
 		JScrollPane scrollpane = new JScrollPane(table);
 		
 		//Set the Title
-		title = new JLabel("               Activity ViewPort");
+		title = new JLabel("Activity ViewPort", JLabel.CENTER);
 		title.setFont(title.getFont().deriveFont(fontScalar*50f));
 		
 		//Add title and Table(scrollpane) to Panel

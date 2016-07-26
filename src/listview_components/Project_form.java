@@ -1,12 +1,11 @@
 package listview_components;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
+
 import resources.Projects;
 import resources.Users;
 import saver_loader.DataResource;
 
-import javax.swing.JLabel;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,9 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.awt.Color;
-import javax.swing.JTextField;
 import javax.swing.border.BevelBorder;
-import javax.swing.JButton;
 
 @SuppressWarnings("serial")
 public class Project_form extends JFrame {
@@ -117,15 +114,34 @@ public class Project_form extends JFrame {
         
         
         //Create a new Project with information from the form, userList, and date
-        Projects newProject = new Projects(NameField.getText(), userList, date,DataResource.currentUser.getID(),
-        		DescField.getText(), Double.parseDouble(BudgetField.getText()));
-        DataResource.projectList.add(newProject);
-        
-        ProjectListPane.updateList();
-        this.dispose();
-        
-        DataResource.saveProject(newProject);
-        //DataResource.saveToDB(); 
+        try
+        {
+            Projects newProject = new Projects(NameField.getText(), userList, date,DataResource.currentUser.getID(),
+                    DescField.getText(), Double.parseDouble(BudgetField.getText()));
+            DataResource.projectList.add(newProject);
+
+            ProjectListPane.updateList();
+            this.dispose();
+
+            DataResource.saveProject(newProject);
+            //DataResource.saveToDB();
+        }
+        catch (Exception exception) {
+            if (!BudgetField.getText().isEmpty())
+            {
+                JOptionPane.showMessageDialog(new JFrame(),
+                        "Budget must be numeric",
+                        "Budget must be numeric",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+            else
+            {
+                JOptionPane.showMessageDialog(new JFrame(),
+                        "Please fill in all values",
+                        "Values are Empty",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+        }
     }
 	
 	private void disposeWindow(){

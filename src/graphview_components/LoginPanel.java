@@ -1,4 +1,5 @@
 package graphview_components;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
@@ -29,10 +30,10 @@ import java.sql.*;
 public class LoginPanel extends JPanel{
 
 	
-	JLabel username = new JLabel("Enter username:");
-	JLabel password = new JLabel("Enter password:");
+	JLabel username = new JLabel("Enter username");
+	JLabel password = new JLabel("Enter password");
 	JLabel authorizationStatus = new JLabel("authorization pending...");
-	JLabel title = new JLabel("Ultimate Sandwhich Program Management System");
+	JLabel title = new JLabel("Ultimate Sandwich Program Management System", JLabel.CENTER);
 	
 	JTextField usernameField = new JTextField();
 	JPasswordField passwordField = new JPasswordField();
@@ -44,18 +45,23 @@ public class LoginPanel extends JPanel{
 	
 	public LoginPanel(){
 		
-		Font fs40 = username.getFont().deriveFont(fontScalar*40f);
-		Font fs45 = username.getFont().deriveFont(fontScalar*45f);
+		Font fs40 = username.getFont().deriveFont(fontScalar*35f);
+		Font fs45 = username.getFont().deriveFont(fontScalar*40f);
+		
 
 
-		//Set font size for each message
+		//Set font size and color for each message
 		title.setFont(fs45);
-		username.setFont(fs40);		
+		title.setForeground(Color.decode("#d9d9d9"));
+		username.setFont(fs40);	
+		username.setForeground(Color.decode("#d9d9d9"));
 		password.setFont(fs40);
+		password.setForeground(Color.decode("#d9d9d9"));
 		usernameField.setFont(fs40);
 		passwordField.setFont(fs40);
 		loginButton.setFont(fs40);
 		authorizationStatus.setFont(fs40);
+		authorizationStatus.setForeground(Color.decode("#d9d9d9"));
 
 
 		//Set Layout and position the elements
@@ -93,10 +99,12 @@ public class LoginPanel extends JPanel{
 		c.gridy = 4;
 		passwordField.setColumns(15);
 		this.add(passwordField, c);
+        passwordField.addActionListener(new EnterListener());
 		
 		c.gridy = 5;
 		loginButton.addActionListener(new ButtonListener());
 		this.add(loginButton, c);
+
 		
 		c.weighty = 1;
 		c.gridy = 6;
@@ -150,7 +158,7 @@ public class LoginPanel extends JPanel{
 	            ResultSet result = ps.executeQuery();
 	            if(result.next()){
 	            	
-	            	authorizationStatus.setText("login successful");
+	            	authorizationStatus.setText("Login Successful");
 	    			authorizationStatus.paintImmediately(authorizationStatus.getVisibleRect());
 	    			
 	    			// Create Current User 
@@ -198,5 +206,71 @@ public class LoginPanel extends JPanel{
 	        }
 		}	
 	}
+
+    private class EnterListener implements ActionListener{
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+            Connection connection = null;
+            PreparedStatement ps;
+
+            try{
+                connection = DriverManager.getConnection("jdbc:sqlite:ultimate_sandwich.db");
+                ps = connection.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?");
+
+                ps.setString(1, usernameField.getText());
+                ps.setString(2, String.valueOf(passwordField.getPassword()));
+                ResultSet result = ps.executeQuery();
+                if(result.next()){
+
+                    authorizationStatus.setText("login successful");
+                    authorizationStatus.paintImmediately(authorizationStatus.getVisibleRect());
+
+                    // Create Current User
+                    DataResource.currentUser = new Users(result.getString(4),result.getString(2),result.getString(3),
+                            result.getString(5),result.getInt(1),result.getString(6));
+
+                    if(DataResource.currentUser.getType() == UserType.MANAGER) {
+                        DataResource.loadManagerDataFromDB();
+                    } else {
+                        DataResource.loadMemberDataFromDB();
+                    }
+
+                    try {
+                        Thread.sleep(1000);                 //1000 milliseconds is one second.
+                    } catch(InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    ClientLauncher.loginFrame.dispose();
+
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            ClientLauncher.launchCLient();
+                        }
+                    });
+
+
+                }
+                else
+                {
+                    authorizationStatus.setText("login failed: invalid username or password");
+                    authorizationStatus.paintImmediately(authorizationStatus.getVisibleRect());
+                }
+
+            }catch(Exception exception) {
+                System.out.println(exception.getMessage());
+            }
+
+            try{
+                connection.close();
+            }catch(Exception closingException)
+            {
+                System.out.println(closingException.getMessage());
+            }
+        }
+    }
 
 }

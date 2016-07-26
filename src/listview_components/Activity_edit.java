@@ -1,15 +1,11 @@
 package listview_components;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
+
 import resources.Activities;
 import resources.Users;
 import saver_loader.DataResource;
 
-import javax.swing.JTextField;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DateFormat;
@@ -20,7 +16,6 @@ import java.util.Date;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.JButton;
 
 @SuppressWarnings("serial")
 public class Activity_edit extends JFrame {
@@ -249,47 +244,72 @@ public class Activity_edit extends JFrame {
 			
 			Activities myActivity = DataResource.selectedActivity;
 
-			myActivity.setDescription(descriptionField.getText());
-			myActivity.setStartDate(start);
-			myActivity.setEndDate(end);
-			myActivity.setLabel(activityLabelField.getText());
+            if (start.before(end) && !descriptionField.getText().isEmpty() && !activityLabelField.getText().isEmpty())
+            {
+                myActivity.setDescription(descriptionField.getText());
+                myActivity.setStartDate(start);
+                myActivity.setEndDate(end);
+                myActivity.setLabel(activityLabelField.getText());
 
-			if (!dependencies.isEmpty()) {
+                if (!dependencies.isEmpty()) {
 
-				DataResource.selectedProject.resetIncomingEdges(myActivity);
-				ArrayList<Activities> activities = DataResource.selectedProject.getActivityList();
+                    DataResource.selectedProject.resetIncomingEdges(myActivity);
+                    ArrayList<Activities> activities = DataResource.selectedProject.getActivityList();
 
-				// Set the dependencies in the JGraphT
-				for (String element : dependencies) {
+                    // Set the dependencies in the JGraphT
+                    for (String element : dependencies) {
 
-					for (Activities activity : activities) {
+                        for (Activities activity : activities) {
 
-						if (activity.getLabel().equals(element))
-							DataResource.selectedProject.addArrow(activity, myActivity);
-					}
-				}
-			}
+                            if (activity.getLabel().equals(element))
+                                DataResource.selectedProject.addArrow(activity, myActivity);
+                        }
+                    }
+                }
 
-			if (!members.isEmpty()) {
-				DataResource.resetActivityMembers(DataResource.selectedActivity.getId());
-				ArrayList<Users> users = DataResource.projectMembers;
-				ArrayList<Users> tmp = new ArrayList<Users>();
+                if (!members.isEmpty()) {
+                    DataResource.resetActivityMembers(DataResource.selectedActivity.getId());
+                    ArrayList<Users> users = DataResource.projectMembers;
+                    ArrayList<Users> tmp = new ArrayList<Users>();
 
-				for (String element : members) {
-					for (Users user : users) {
-						if (user.getName().equals(element))
-							tmp.add(user);
-					}
-				}
-				DataResource.selectedActivity.setMemberList(tmp);
-			}
-			
-			
-			//******************************SAVE TO DATABASE METHOD*********************************8
-			DataResource.saveActivity(DataResource.selectedActivity);
-			//DataResource.saveToDB();
+                    for (String element : members) {
+                        for (Users user : users) {
+                            if (user.getName().equals(element))
+                                tmp.add(user);
+                        }
+                    }
+                    DataResource.selectedActivity.setMemberList(tmp);
+                }
+
+
+                //******************************SAVE TO DATABASE METHOD*********************************8
+                DataResource.saveActivity(DataResource.selectedActivity);
+                //DataResource.saveToDB();
+            }
+            else
+            {
+                if (start.after(end))
+                {
+                    JOptionPane.showMessageDialog(new JFrame(),
+                            "End date must be AFTER start date",
+                            "Incorrect Dates",
+                            JOptionPane.WARNING_MESSAGE);
+                }
+                else
+                {
+                    JOptionPane.showMessageDialog(new JFrame(),
+                            "End date must be AFTER start date",
+                            "Incorrect Dates",
+                            JOptionPane.WARNING_MESSAGE);
+                }
+
+            }
+
 		} catch (Exception exception) {
-			System.out.println(exception.getMessage());
+            JOptionPane.showMessageDialog(new JFrame(),
+                    "End date must be AFTER start date",
+                    "Incorrect Dates",
+                    JOptionPane.WARNING_MESSAGE);
 		}
 
 	}

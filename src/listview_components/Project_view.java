@@ -2,6 +2,8 @@ package listview_components;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
+import resources.UserType;
 import saver_loader.DataResource;
 
 import javax.swing.JLabel;
@@ -18,6 +20,7 @@ import org.jfree.ui.RefineryUtilities;
 import graphview_components.GanttChart;
 
 import javax.swing.JButton;
+import javax.swing.JTextArea;
 
 @SuppressWarnings("serial")
 public class Project_view extends JFrame {
@@ -26,6 +29,7 @@ public class Project_view extends JFrame {
 	private JLabel nameField;
 	private JLabel descriptionField;
 	private JLabel BudgetField;
+
 
 	/**
 	 * Create the frame.
@@ -65,7 +69,7 @@ public class Project_view extends JFrame {
 		contentPane.add(nameField);
 
 		descriptionField = new JLabel(DataResource.selectedProject.getDescription());
-		descriptionField.setBounds(139, 123, 147, 20);
+		descriptionField.setBounds(139, 123, 200, 20);
 		contentPane.add(descriptionField);
 
 		BudgetField = new JLabel(Double.toString(DataResource.selectedProject.getBudget()));
@@ -77,9 +81,21 @@ public class Project_view extends JFrame {
 		btnCancel.setBounds(197, 261, 89, 23);
 		contentPane.add(btnCancel);
 
-		JButton btnGantt = new JButton("Generate Gantt");
-		btnGantt.setBounds(46, 261, 89, 23);
-		contentPane.add(btnGantt);
+        if (DataResource.currentUser.getType() == UserType.MANAGER)
+        {
+            JButton btnGantt = new JButton("Generate Gantt");
+            btnGantt.setBounds(46, 261, 120, 23);
+            contentPane.add(btnGantt);
+
+            btnGantt.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    ganttAction();
+                    disposeWindow();
+                }
+            });
+        }
 
 		JLabel editLabel = new JLabel("View");
 		Font font = editLabel.getFont();
@@ -97,15 +113,6 @@ public class Project_view extends JFrame {
 		btnCancel.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				disposeWindow();
-			}
-		});
-
-		btnGantt.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				ganttAction();
 				disposeWindow();
 			}
 		});
