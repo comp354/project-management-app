@@ -14,6 +14,7 @@ import java.util.Set;
 import org.jgraph.graph.DefaultEdge;
 
 import resources.Activities;
+import resources.PertData;
 import resources.Projects;
 import resources.TaskProgress;
 import resources.Users;
@@ -119,7 +120,7 @@ public class DataResource {
 		PreparedStatement ps;
 
 		try {
-			
+
 			// delete the project
 			// cascade takes care of associated tuples in other tables
 			sql = ("DELETE FROM projects WHERE id=" + project.getId());
@@ -139,7 +140,7 @@ public class DataResource {
 			sql = ("DELETE FROM activity_user_project_relationships WHERE project_id=" + project.getId());
 			ps = connection.prepareStatement(sql);
 			ps.executeUpdate();
-			
+
 			sql = ("DELETE FROM user_project_relationships WHERE project_id=" + project.getId());
 			ps = connection.prepareStatement(sql);
 			ps.executeUpdate();
@@ -165,12 +166,15 @@ public class DataResource {
 		PreparedStatement ps;
 
 		try {
-			
-			// delete activity from activities table in database
-			sql = ("DELETE FROM activities WHERE id=" + A.getId());
-			ps = connection.prepareStatement(sql);
-			ps.executeUpdate();
 
+			if(!A.isPertGenerated()){
+			
+				sql = ("DELETE FROM Pert_data WHERE activity_id=" + A.getId());
+				ps = connection.prepareStatement(sql);
+				ps.executeUpdate();
+				
+			}
+						
 			// delete activity from activity_project_relationships in database
 			sql = ("DELETE FROM activity_project_relationships WHERE activity_id=" + A.getId());
 			ps = connection.prepareStatement(sql);
@@ -184,6 +188,9 @@ public class DataResource {
 			sql = ("DELETE FROM activity_user_project_relationships WHERE activity_id=" + A.getId());
 			ps = connection.prepareStatement(sql);
 			ps.executeUpdate();
+			
+		
+			
 
 		} catch (Exception exception) {
 			System.out.println(exception.getMessage());
@@ -252,8 +259,11 @@ public class DataResource {
 		closeConnection(connection);
 	}
 
-	public static void load(Connection connection, String projectName, String date, int projectID, int managerID,
+	public static void load(String projectName, String date, int projectID, int managerID,
 			String description, double budget, ResultSet resultn, ArrayList<Activities> activityList) {
+		
+			Connection connection = DataResource.createConnectionToDB(DataResource.dataBase);
+		
 		try {
 			// getting all users associated with project
 			PreparedStatement ps1 = connection
@@ -301,8 +311,14 @@ public class DataResource {
 					Date end = dateFormatter.parse(result5.getString(5));
 					TaskProgress progress = TaskProgress.valueOf(result5.getString(6));
 					int activityBudget = result5.getInt(7);
+					Date target = dateFormatter.parse(result5.getString(8));
 
-					activityList.add(new Activities(desc, start, end, name, id, progress, activityBudget));
+					if(hasPertData(id)){
+
+						activityList.add(new Activities(desc, start, end, name, id, progress, activityBudget,false));
+					}else{
+						activityList.add(new Activities(desc, start, end, name, id, progress, activityBudget,true));
+					}
 				}
 
 			}
@@ -311,7 +327,7 @@ public class DataResource {
 
 			for (Activities acts : activityList) {
 				project.addActivity(acts);// adding each activity to the
-											// project
+				// project
 
 			}
 
@@ -351,6 +367,33 @@ public class DataResource {
 		} catch (Exception exception) {
 			System.out.println(exception.getMessage());
 		}
+		closeConnection(connection);
+	}
+
+	private static boolean hasPertData(int id) {
+
+		try {
+			Connection connection = DataResource.createConnectionToDB(dataBase);
+			PreparedStatement ps1 = connection.prepareStatement("SELECT sd FROM Pert_data WHERE activity_id = ?");
+			ps1.setInt(1, id);
+			ResultSet result1 = ps1.executeQuery();
+
+			if(result1.next()) {
+				closeConnection(connection);
+				return true;
+
+			}else{
+
+				closeConnection(connection);
+				return false;
+
+			}
+		}catch (Exception exception) {
+			System.out.println(exception.getMessage());
+		}
+			
+		return false;
+
 	}
 
 	public static void loadMemberDataFromDB() {
@@ -358,8 +401,8 @@ public class DataResource {
 		PreparedStatement ps;
 
 		try {
-			
-			loadStart(connection);
+
+			loadStart();
 
 			PreparedStatement ps4 = connection.prepareStatement(
 					"SELECT distinct project_id from activity_user_project_relationships where user_id = ?");
@@ -392,7 +435,7 @@ public class DataResource {
 					psn.setInt(2, currentUser.getID());
 					ResultSet resultn = psn.executeQuery();
 
-					load(connection, projectName, date, projectID, managerID, description, budget, resultn,
+					load(projectName, date, projectID, managerID, description, budget, resultn,
 							activityList);
 				}
 			}
@@ -419,7 +462,7 @@ public class DataResource {
 		PreparedStatement ps;
 
 		try {
-			loadStart(connection);
+			loadStart();
 
 			ps = connection.prepareStatement("SELECT * FROM projects " + "WHERE manager_id =?;");
 			ps.setInt(1, currentUser.getID());
@@ -444,7 +487,7 @@ public class DataResource {
 				ps4.setInt(1, projectID);
 				ResultSet result4 = ps4.executeQuery();
 
-				load(connection, projectName, date, projectID, managerID, description, budget, result4, activityList);
+				load(projectName, date, projectID, managerID, description, budget, result4, activityList);
 			}
 
 		} catch (Exception exception) {
@@ -459,8 +502,10 @@ public class DataResource {
 	 * loads the common elements of both user types.
 	 * @param connection
 	 */
-	private static void loadStart(Connection connection) {
+	private static void loadStart() {
 		// get project members
+		
+			Connection connection = DataResource.createConnectionToDB(DataResource.dataBase);
 		try {
 			PreparedStatement psTotMembers = connection.prepareStatement("SELECT * FROM users where user_type = 'MEMBER';");
 			ResultSet resultTotMembers = psTotMembers.executeQuery();
@@ -491,9 +536,15 @@ public class DataResource {
 			if (result3.next()) {
 				Activities.setActivityCount(result3.getInt(1));
 			}
+			
+			
+			
 		} catch (Exception exception) {
 			System.out.println(exception.getMessage());
 		}
+		
+		closeConnection(connection);
+		
 	}
 
 	/**
@@ -507,8 +558,7 @@ public class DataResource {
 		Connection connection = DataResource.createConnectionToDB(dataBase);
 		PreparedStatement ps;
 
-		try {
-			
+		try{
 
 			String projectName, description, date;
 			int projectID, managerID;
@@ -549,7 +599,7 @@ public class DataResource {
 				// for each project, insert the list of activities associated
 				// with that project into the database
 				int activityID, dependentActivityID, activityBudget;
-				String actLabel, actDescription, start, end, progress;
+				String actLabel, actDescription, start, end, progress, targetDate;
 
 				for (Activities activity : projects.getActivityList()) {
 					activityID = activity.getId();
@@ -559,9 +609,10 @@ public class DataResource {
 					start = dateFormatter.format(activity.getStartDate());
 					end =  dateFormatter.format(activity.getEndDate());
 					activityBudget = activity.getBudget();
+					
+					sql = ("INSERT OR REPLACE INTO activities(id, label, description, startdate, endate, progress, budget, finisheddate) VALUES "
+							+ "(?, ?, ?, ?, ?, ?, ?, ?)");
 
-					sql = ("INSERT OR REPLACE INTO activities(id, label, description, startdate, endate, progress, budget) VALUES "
-							+ "(?, ?, ?, ?, ?, ?, ?)");
 					ps = connection.prepareStatement(sql);
 					ps.setInt(1, activityID);
 					ps.setString(2, actLabel);
@@ -570,6 +621,15 @@ public class DataResource {
 					ps.setString(5, end);
 					ps.setString(6, progress);
 					ps.setInt(7, activityBudget);
+				
+
+					if(isfinished(activity)){
+
+						ps.setString(8,dateFormatter.format(new Date()));
+
+					}else{
+						ps.setString(8, "");
+					}
 					ps.executeUpdate();
 
 					sql = ("INSERT OR REPLACE INTO activity_project_relationships(project_id, activity_id) VALUES "
@@ -611,13 +671,11 @@ public class DataResource {
 						}
 					}
 				}
-
 			}
 
-		} catch (Exception exception) {
+		}catch (Exception exception) {
 			System.out.println(exception.getMessage());
 		}
-
 		closeConnection(connection);
 	}
 
@@ -640,11 +698,11 @@ public class DataResource {
 	{
 		//save the tuple in Activities table in the database where that id is equal to the selected activity id
 		Connection connection = createConnectionToDB(dataBase);
-		
+
 		int activityID, dependentActivityID, activityBudget;
-		
-		String actLabel, actDescription, start, end, progress;
-		
+
+		String actLabel, actDescription, start, end, progress,targetDate;
+
 		activityID = selectedActivity.getId();
 		actLabel = selectedActivity.getLabel();
 		actDescription = selectedActivity.getDescription();
@@ -652,11 +710,11 @@ public class DataResource {
 		end =  dateFormatter.format(selectedActivity.getEndDate());
 		progress = selectedActivity.getProgress().name();
 		activityBudget = selectedActivity.getBudget();
-		
-		
-		String sql = ("INSERT OR REPLACE INTO activities(id, label, description, startdate, endate, progress, budget) VALUES "
-				+ "(?, ?, ?, ?, ?, ?, ?)");
-		
+
+
+		String sql = ("INSERT OR REPLACE INTO activities(id, label, description, startdate, endate, progress, budget, finisheddate) VALUES "
+				+ "(?, ?, ?, ?, ?, ?, ?, ?)");
+
 		try {
 			PreparedStatement ps = connection.prepareStatement(sql);
 			ps.setInt(1, activityID);
@@ -666,15 +724,23 @@ public class DataResource {
 			ps.setString(5, end);
 			ps.setString(6, progress);
 			ps.setInt(7, activityBudget);
-			ps.executeUpdate();
 			
+			if(isfinished(selectedActivity)){
+
+				ps.setString(8,dateFormatter.format(new Date()));
+
+			}else{
+				ps.setString(8, " ");
+			}
+			ps.executeUpdate();
+
 			sql = ("INSERT OR REPLACE INTO activity_project_relationships(project_id, activity_id) VALUES "
 					+ "(?, ?)");
 			ps = connection.prepareStatement(sql);
 			ps.setInt(1, selectedProject.getId());
 			ps.setInt(2, activityID);
 			ps.executeUpdate();
-			
+
 			int memberID;
 
 			for (Users member : selectedActivity.getMemberList()) {
@@ -706,21 +772,59 @@ public class DataResource {
 					ps.executeUpdate();
 				}
 			}
-	
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		closeConnection(connection);
 	}
-	
+
+	private static boolean isfinished(Activities activity) {
+
+		Connection connection = DataResource.createConnectionToDB(dataBase);
+		PreparedStatement ps;
+		ResultSet result;
+		TaskProgress db = null;
+
+
+		try {
+			ps = connection.prepareStatement(
+					"SELECT * from activities where id = ?");
+
+			ps.setInt(1, activity.getId());
+			result = ps.executeQuery();
+
+			while (result.next()) {
+
+				db  = TaskProgress.valueOf(result.getString(6));
+
+			}
+
+			if(db == TaskProgress.started){
+				if(activity.getProgress() == TaskProgress.complete){
+
+					closeConnection(connection);
+					return true;
+				}
+			}
+		}catch(Exception e){
+
+			e.printStackTrace();
+		}
+
+		closeConnection(connection);
+		
+		return false;
+	}
+
 	/**
 	 * Method saveProject saves the fields of the selected project to the database.
 	 * @param selectedProject
 	 */
 	public static void saveProject(Projects selectedProject){
-		
+
 		Connection connection = DataResource.createConnectionToDB(dataBase);
 
 		String projectName, description, date;
@@ -728,7 +832,7 @@ public class DataResource {
 		double budget;
 
 		try {
-			
+
 			PreparedStatement ps;
 
 			// load projects in projects table in database
@@ -738,17 +842,17 @@ public class DataResource {
 			projectName = selectedProject.getProjectName();
 			managerID = selectedProject.getManagerID();
 			budget = selectedProject.getBudget();
-			
+
 			int userID = currentUser.getID();
 			// for each project, insert the list of users associated with
 			// that project into the database
-			
+
 			String sql = ("INSERT OR REPLACE INTO user_project_relationships(project_id, user_id) VALUES " + "(?, ?)");
 			ps = connection.prepareStatement(sql);
 			ps.setInt(1, projectID);
 			ps.setInt(2, userID);
 			ps.executeUpdate();
-				
+
 
 			sql = ("INSERT OR REPLACE INTO projects(id, name, date, description, budget, manager_id) "
 					+ "VALUES (?, ?, ?, ?, ?, ?)");
@@ -765,12 +869,12 @@ public class DataResource {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		closeConnection(connection);
-		
+
 	}
 	/*****************************helper functions to connect to and close database connections***************/
-	
+
 	/**
 	 * A helper function to connect to the database. This method returns an active connection to the database.
 	 * @param database
@@ -786,7 +890,7 @@ public class DataResource {
 		}
 		return connection;
 	}
-	
+
 	/**
 	 * A helper function to close the given connection to the database.
 	 * @param connection
@@ -800,6 +904,136 @@ public class DataResource {
 			System.out.println(closingException.getMessage());
 		}
 	}
-	
-	
+
+	public static void addActivityOnNodeInfo(Activities activity){
+		Connection connection = DataResource.createConnectionToDB(dataBase);
+		PreparedStatement ps;
+		try {
+			ps = connection.prepareStatement(
+					"SELECT * from Activity_Node where activity_id = ?");
+
+			ps.setInt(1, activity.getId());
+			ResultSet result4 = ps.executeQuery();
+
+			while (result4.next()) {
+				activity.setEarliestStart(result4.getInt(2));
+				activity.setEarliestFinish(result4.getInt(3));
+				activity.setLatestStart(result4.getInt(4));
+				activity.setLatestFinish(result4.getInt(5));
+			}
+			
+			closeConnection(connection);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Creates the all the data for PERT analysis for 1 activity
+	 * 
+	 * if the data was never specified by a user it will be generated by historical data that has the same max duration 
+	 * 
+	 * 
+	 * @param activity
+	 * @return PertData for that Activity
+	 */
+
+
+	public static PertData getPertData(Activities activity){
+
+		PertData pert = null;
+
+		Connection connection = DataResource.createConnectionToDB(dataBase);
+		PreparedStatement ps, ps2 ;
+		ResultSet result;
+		ResultSet result2;
+		try {
+			ps = connection.prepareStatement(
+					"SELECT * from Pert_data where activity_id = ?");
+
+			ps.setInt(1, activity.getId());
+			result = ps.executeQuery();
+
+			while (result.next()) {
+				pert = new PertData(activity.getId(), result.getInt(2), result.getInt(3), result.getInt(4), result.getDouble(5));
+			}
+
+			//if no data is specified it will generate the data(this will be dynamic and change every time as more activities get added)
+			//Self Learning		
+			if(pert == null){
+
+				//get the activity's information for pestimisticTime ,optimisticTime,mostLikelyTime
+				ps = connection.prepareStatement(
+						"SELECT * from Activity_Node where activity_id = ?");
+				ps.setInt(1, activity.getId());
+				ResultSet result4 = ps.executeQuery();
+
+				int pestimisticTime = (Integer) null;
+				int optimisticTime= (Integer) null;
+				int mostLikelyTime= (Integer) null;
+				double standardDeviation= (Double) null;		
+
+				while (result4.next()) {
+
+					pestimisticTime = result.getInt(5)- result.getInt(2);
+					optimisticTime = result.getInt(4) - result.getInt(3); 
+					mostLikelyTime = (result.getInt(5)-result.getInt(4))/2;
+				}		
+
+				//this will calculate the Standard Deviation
+				ps = connection.prepareStatement(
+						"SELECT activity_id from Activity_Node where  Activity_Node.LF - Activity_Node.ES = ?");
+				ps.setDouble(1, (double)pestimisticTime );
+				result = ps.executeQuery();
+
+				ArrayList<Integer> std = new ArrayList<Integer>();
+
+				while(result.next()){
+					ps2 = connection.prepareStatement(
+							"SELECT finisheddate-endate from activities where  id = ?");
+					ps2.setDouble(1, result.getInt(1) );
+					result2 = ps.executeQuery();
+					while(result2.next()){
+						std.add(result.getInt(1));
+					}
+
+					//math to calculate Standard deviation ( Sqrt of ( |E(x - average)^2|/n )
+					int sum =0;
+					for(int i : std){	sum += i;	}
+					int average = sum/std.size();
+					for(int i : std){	sum = i - average;	}
+
+					standardDeviation = Math.sqrt((sum* sum)/std.size());
+
+					pert = new PertData(activity.getId(), pestimisticTime, optimisticTime, mostLikelyTime, standardDeviation);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		closeConnection(connection);
+		
+		return pert;
+	}
+
+	public static void setPertData(PertData pert){
+
+		try {
+			Connection connection = DataResource.createConnectionToDB(dataBase);
+			String sql = ("REPLACE INTO Pert_data(activity_id, P, O, M, Sd) VALUES "
+					+ "(?, ?, ?, ?, ?)");
+			PreparedStatement ps = connection.prepareStatement(sql);
+			ps.setInt(1, pert.getActivityId() );
+			ps.setInt(2, pert.getPestimisticTime());
+			ps.setInt(3, pert.getOptimisticTime());
+			ps.setInt(4, pert.getMostLikelyTime());
+			ps.setDouble(5, pert.getStandardDeviation());
+			ps.executeUpdate();
+			closeConnection(connection);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+}
 }

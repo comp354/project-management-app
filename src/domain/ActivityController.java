@@ -17,18 +17,21 @@ public class ActivityController extends ActivitySubject{
 
 	}
 	
-	public static void addActivity(String description, String startDate, String endDate, String label, ArrayList<String> dependencies, ArrayList<String> members, String progress, int budget) {
+	public static void addActivity(String description, String startDate, String endDate, String label, ArrayList<String> dependencies, ArrayList<String> members, String progress, int budget,boolean specifyPert) {
 		try {
 			DateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
 			Date start = dateFormatter.parse(startDate);
 			Date end = dateFormatter.parse(endDate);
 
+			Activities newActivity;
+			
             if (start.before(end))
             {
                 // Create activity and add it to current Project
-                Activities newActivity = new Activities(description, start, end, label, TaskProgress.valueOf(progress), budget);
-                DataResource.selectedProject.addActivity(newActivity);
-
+          
+                newActivity = new Activities(description, start, end, label, TaskProgress.valueOf(progress), budget, specifyPert);
+            	DataResource.selectedProject.addActivity(newActivity);
+               
                 // Set the dependencies in the JGraphT
                 for (String element : dependencies) {
 

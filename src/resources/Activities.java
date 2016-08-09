@@ -37,6 +37,7 @@ public class Activities {
 	private double ev;
 	private ArrayList<Users> memberList;
 	private TaskProgress progress;
+	private boolean generatedPert;
 
 	/**
 	 * Default Constructor. Sets all values to null or junk values.
@@ -59,6 +60,8 @@ public class Activities {
 		this.progress = TaskProgress.pending;
 		this.pv = -1;
 		this.ev = -1;
+		this.generatedPert = true;
+		
 	}
 
 	/**
@@ -76,7 +79,7 @@ public class Activities {
 	 * @param label
 	 *            value for label
 	 */
-	public Activities(String description, Date startDate, Date endDate, String label, TaskProgress p, int budget) {
+	public Activities(String description, Date startDate, Date endDate, String label, TaskProgress p, int budget, boolean genpert) {
 		this.id = ++activityCount;
 		this.description = description;
 		this.startDate = startDate;
@@ -94,6 +97,7 @@ public class Activities {
 		this.depth = -1;
 		this.progress = p;
 		this.pv = budget;
+		this.generatedPert = genpert;
 	}
 
 	/**
@@ -114,7 +118,7 @@ public class Activities {
 	 *            value for id
 	 * @param progress2 
 	 */
-	public Activities(String description, Date startDate, Date endDate, String label, int id, TaskProgress p, int budget) {
+	public Activities(String description, Date startDate, Date endDate, String label, int id, TaskProgress p, int budget, boolean genpert) {
 		this.id = id;
 		this.description = description;
 		this.description = description;
@@ -132,6 +136,7 @@ public class Activities {
 		this.memberList = new ArrayList<Users>();
 		this.progress = p;
 		this.pv = budget;
+		this.generatedPert = genpert;
 	}
 
 	/**
@@ -476,5 +481,14 @@ public class Activities {
 	
 	public double getEarnedValue() {
 		return this.ev;
+	}
+
+	/**
+	 * Returns true if System needs to use other activites to create pert data
+	 * 
+	 * @return
+	 */
+	public boolean isPertGenerated() {
+		return generatedPert;
 	}
 }
