@@ -17,6 +17,7 @@ import org.jgraph.graph.GraphConstants;
 import org.jgraph.layout.JGraphLayoutAlgorithm;
 import org.jgraph.layout.SugiyamaLayoutAlgorithm;
 import org.jgrapht.graph.*;
+import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
 import org.jgrapht.ext.JGraphModelAdapter;
 
 import resources.Activities;
@@ -25,7 +26,7 @@ public class CriticalPathChart extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	public CriticalPathChart(DefaultDirectedGraph<Activities, DefaultEdge> graph, String title) {
+	public CriticalPathChart(DirectedAcyclicGraph<Activities, DefaultEdge> graph, String title) {
 		super(title);
 		
 		JGraphModelAdapter<Activities, DefaultEdge> graphAdapter = new JGraphModelAdapter<Activities, DefaultEdge>( graph );

@@ -3,6 +3,7 @@ package resources;
 import java.util.Set;
 
 import org.jgraph.graph.DefaultEdge;
+import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
 import saver_loader.DataResource;
@@ -38,7 +39,7 @@ public class Projects {
 	private String projectName;
 	private ArrayList<Users> userList;
 	private String date;
-	private DefaultDirectedGraph<Activities,DefaultEdge> activityGraph;
+	private DirectedAcyclicGraph<Activities,DefaultEdge> activityGraph;
 	private ArrayList<Activities> activityList;
 	private int managerID;
 	private double budget, earnedValue;
@@ -88,7 +89,7 @@ public class Projects {
 		this.projectName = projectName;
 		this.userList = userList;
 		this.date = date;
-		this.activityGraph = new DefaultDirectedGraph<Activities,DefaultEdge>(DefaultEdge.class);
+		this.activityGraph = new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class);
 		this.activityList = new ArrayList<Activities>();
 		this.managerID = managerID;
 		this.budget = budget;
@@ -114,7 +115,7 @@ public class Projects {
 		this.projectName = projectName;
 		this.userList = userList;
 		this.date = date;
-		this.activityGraph = new DefaultDirectedGraph<Activities,DefaultEdge>(DefaultEdge.class);
+		this.activityGraph = new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class);
 		this.activityList = new ArrayList<Activities>();
 		this.managerID = managerID;
 		this.budget = budget;
@@ -254,7 +255,7 @@ public class Projects {
 	 * Getter for activityGraph
 	 * @return DefaultDirectedGraph activityGraph
 	 */
-	public DefaultDirectedGraph<Activities, DefaultEdge> getActivityGraph() {
+	public DirectedAcyclicGraph<Activities, DefaultEdge> getActivityGraph() {
 		return activityGraph;
 	}
 
@@ -262,7 +263,7 @@ public class Projects {
 	 * Setter for activityGraph
 	 * @param activityGraph value activityGraph
 	 */
-	public void setActivityGraph(DefaultDirectedGraph<Activities, DefaultEdge> activityGraph) {
+	public void setActivityGraph(DirectedAcyclicGraph<Activities, DefaultEdge> activityGraph) {
 		this.activityGraph = activityGraph;
 	}
 	

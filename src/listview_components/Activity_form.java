@@ -193,18 +193,17 @@ public class Activity_form extends JFrame {
 
 					if (start.before(end) && !descriptionField.getText().isEmpty() && !startField.getText().isEmpty() && !endField.getText().isEmpty() && !activityLabelField.getText().isEmpty())
 					{
-
 						int n = JOptionPane.showConfirmDialog(new JFrame(),
 								"Would you Like to add PERT info",
 								"Pert Info",
 								JOptionPane.YES_NO_OPTION);
 						boolean specifyPERT = false;
 
-						if(n>0){specifyPERT = true;	}
+						if(n>=0){specifyPERT = true;	}
 
 						ActivityController.addActivity(descriptionField.getText(), startField.getText(), endField.getText(), activityLabelField.getText(), dependencies, members, progressField.getSelectedItem().toString(), (int)budgetField.getModel().getValue(),specifyPERT);
 
-						if(n>0){
+						if(n>=0){
 
 							SwingUtilities.invokeLater(new Runnable(){
 
@@ -217,6 +216,7 @@ public class Activity_form extends JFrame {
 							});
 						}
 						disposeWindow();
+
 					}
 					else
 					{

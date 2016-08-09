@@ -104,7 +104,31 @@ public class ActivityController extends ActivitySubject{
                 myActivity.setProgress(TaskProgress.valueOf(progress));
                 myActivity.setBudget(budget);
 
-                if (!dependencies.isEmpty()) {
+                if (!dependencies.isEmpty()) {                	
+                	String firstNode = new String();
+                	String lastNode = new String();
+                	for(Activities a : DataResource.selectedProject.getActivityList()) {
+                		if(DataResource.selectedProject.getOutgoingArrowsOfActivity(a).size() == 0)
+                			lastNode = a.getLabel();
+                		else if(DataResource.selectedProject.getIncomingArrowsOfActivity(a).size() == 0)
+                			firstNode = a.getLabel();
+                	}
+                	
+                	if(myActivity.getLabel().equals(firstNode)) {
+                		JOptionPane.showMessageDialog(new JFrame(),
+                                "Cannot add dependencies to the first activity",
+                                "Incorrect Dependency",
+                                JOptionPane.WARNING_MESSAGE);
+                		return;
+            		}
+                	
+                	if(dependencies.contains(lastNode)) {
+                		JOptionPane.showMessageDialog(new JFrame(),
+                                "Activity cannot depend on the last activity",
+                                "Incorrect Dependency",
+                                JOptionPane.WARNING_MESSAGE);
+                		return;
+            		}
 
                     DataResource.selectedProject.resetIncomingEdges(myActivity);
                     ArrayList<Activities> activities = DataResource.selectedProject.getActivityList();
