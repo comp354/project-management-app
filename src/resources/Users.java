@@ -75,6 +75,8 @@ public class Users {
 		}		
 	}
 	
+	
+	
 	/**
 	 * Getter for name
 	 * @return String name

@@ -84,6 +84,62 @@ public class DataResource {
 	}
 
 	/**
+	 * 
+	 * @param projectId
+	 * @return
+	 */
+	public static Projects getProjectByProjectIdFromDB(int projectId) {
+		Projects project = null;
+		
+		Connection connection = DataResource.createConnectionToDB(dataBase);
+		String sql;
+		PreparedStatement ps;
+		
+		try {
+			sql = ("SELECT * FROM projects WHERE id=" + projectId);
+			ps = connection.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+		
+			project = new Projects(rs.getInt("id"), rs.getString("name"), rs.getString("date"), rs.getString("description"), rs.getDouble("budget"),rs.getInt("manager_id"));
+			
+		} catch (Exception exception) {
+			System.out.println(exception.getMessage());
+		}
+		
+		closeConnection(connection);
+		
+		return project;
+	}
+	
+	/**
+	 * 
+	 * @param userId
+	 * @return
+	 */
+	public static Users getUserByIdFromDB(int userId) {
+		Users user = null;
+		
+		Connection connection = DataResource.createConnectionToDB(dataBase);
+		String sql;
+		PreparedStatement ps;
+		
+		try {
+			sql = ("SELECT * FROM users WHERE id=" + userId);
+			ps = connection.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+		
+			user = new Users(rs.getString("username"), rs.getString("first_name"), rs.getString("last_name"), rs.getString("password"), rs.getInt("id"), rs.getString("user_type"));
+			
+		} catch (Exception exception) {
+			System.out.println(exception.getMessage());
+		}
+		
+		closeConnection(connection);
+		
+		return user;
+	}
+	
+	/**
 	 * Method used to retrieve a project by projectName given a string passed in
 	 * parameters. Project must be contained in the projectList.
 	 * 

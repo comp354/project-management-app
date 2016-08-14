@@ -124,6 +124,24 @@ public class Projects {
 	}
 	
 	/**
+	 * 
+	 * @param projectName
+	 * @param date
+	 * @param projectID
+	 * @param managerID
+	 * @param description
+	 * @param budget
+	 */
+	public Projects(int projectID, String projectName, String date, String description, double budget, int managerID) {
+		this.id = projectID;
+		this.projectName = projectName;
+		this.date = date;
+		this.managerID = managerID;
+		this.budget = budget;
+		this.description = description;
+	}
+	
+	/**
 	 * Getter for userList
 	 * @return ArrayList userList
 	 */
