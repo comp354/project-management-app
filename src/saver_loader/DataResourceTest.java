@@ -12,9 +12,12 @@ import java.util.Date;
 import java.util.Set;
 
 import org.jgraph.graph.DefaultEdge;
+import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
 import org.junit.Before;
 import org.junit.Test;
 
+import domain.ActivityController;
+import domain.ProjectController;
 import resources.Activities;
 import resources.Projects;
 import resources.TaskProgress;
@@ -24,6 +27,13 @@ import resources.Users;
 public class DataResourceTest {
     
 	private static String testDB = "jdbc:sqlite:ultimate_sandwich_test.db";
+	
+	private Projects project = null;
+	private String today, tomorrow;
+	private ArrayList<String> memberListEmpty;
+	private ArrayList<String> memberList;
+	private ArrayList<String> dependenciesEmpty;
+	private ArrayList<String> dependencies;
 	
 	/**
 	 * @Before runs before each test. Sets the test database as the target database, empties it, and sets it up
@@ -40,6 +50,401 @@ public class DataResourceTest {
 
 		DataResource.projectList.clear();
 
+    }
+	// #2 Boundary Test
+	@Test
+	public void testGetCostPerformanceIndex() {		
+		Projects p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		Activities a = new Activities();
+		p.addActivity(a);
+		a.setProgress(TaskProgress.complete);
+		
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		try {
+			p.getEarnedValue();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+		
+		assertTrue("should have a budget of -1", p.getBudget() == -1);
+		try {
+			p.getCostPerformanceIndex();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+		
+		a.setBudget(0);
+
+		try {
+			p.getActualCost();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+		
+		try {
+			p.getCostPerformanceIndex();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+		
+		a.setBudget(1);
+		
+		try {
+			p.getActualCost();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+		
+		
+		try {
+			p.getCostPerformanceIndex();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+		
+		a.setBudget(500);
+		try {
+			p.getActualCost();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+		
+		
+		try {
+			p.getCostPerformanceIndex();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		a.setBudget(0);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		
+		a.setBudget(0);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an acutal cost of 0", p.getActualCost() == 0);
+		assertTrue("should have a performance index of 0", p.getCostPerformanceIndex() == 0);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		
+		a.setBudget(2000);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		
+		a.setBudget(1500);
+		a.setProgress(TaskProgress.started);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual cost of 2000", p.getActualCost() == 2000);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1.375);
+	}
+	
+	// #2 Basis-Path Coverage
+	@Test
+	public void testGetCostPerformanceIndexWorstCase() {		
+		Projects p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		Activities a = new Activities();
+		p.addActivity(a);
+		a.setProgress(TaskProgress.complete);
+		
+		p.setBudget(0);
+				
+		a.setBudget(1);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 1", p.getActualCost() == 1);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(500);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 501", p.getActualCost() == 501);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(9999999);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000500", p.getActualCost() == 10000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(10000000);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 20000500", p.getActualCost() == 20000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		p.setBudget(1);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		
+		a.setBudget(0);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000000", p.getActualCost() == 10000000);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(1);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000001", p.getActualCost() == 10000001);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(500);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000501", p.getActualCost() == 10000501);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(9999999);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 20000500", p.getActualCost() == 20000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(10000000);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 30000500", p.getActualCost() == 30000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		p.setBudget(500);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		
+		a.setBudget(0);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000000", p.getActualCost() == 10000000);
+		assertTrue("should have a performance index of 0", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(1);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000001", p.getActualCost() == 10000001);
+		assertTrue("should have a performance index of 500", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(500);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000501", p.getActualCost() == 10000501);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(9999999);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 20000500", p.getActualCost() == 20000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(10000000);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 30000500", p.getActualCost() == 30000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		p.setBudget(9999999);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		
+		a.setBudget(0);
+		assertTrue("should have an actual value of 10000000", p.getActualCost() == 10000000);
+		assertTrue("should have a performance index of 0", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(1);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000001", p.getActualCost() == 10000001);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(500);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000501", p.getActualCost() == 10000501);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(9999999);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 20000500", p.getActualCost() == 20000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(10000000);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 30000500", p.getActualCost() == 30000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		p.setBudget(10000000);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		
+		a.setBudget(0);
+		assertTrue("should have an actual value of 0", p.getActualCost() == 10000000);
+		assertTrue("should have a performance index of 0", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(1);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000001", p.getActualCost() == 10000001);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(500);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 10000501", p.getActualCost() == 10000501);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(9999999);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 20000500", p.getActualCost() == 20000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+		
+		a.setBudget(10000000);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an actual value of 30000500", p.getActualCost() == 30000500);
+		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
+	}
+	
+	// Helper for #4 and #5
+	private void Num4N5Helper() {
+		DataResource.currentUser = DataResource.getUserByIdFromDB(1);
+		DataResource.selectedProject = DataResource.getProjectByProjectIdFromDB(1);
+	}
+	
+	// Helper for #4
+	public void Num4Helper() {
+		Num4N5Helper();
+		
+		memberListEmpty = new ArrayList<String>();
+		memberList = new ArrayList<String>();
+		memberList.add("tsand");
+		
+		dependenciesEmpty = new ArrayList<String>();
+		dependencies = new ArrayList<String>();
+		dependencies.add("TestActivity 3");
+				
+		today = "22-07-2016";
+		tomorrow = "23-07-2016";
+	}
+	
+	// #4 Boundary Test
+	@Test
+    public void budgetShouldBeBetween0And100000AlsoTargetDateShouldBeBetween0And1000() {
+		Num4Helper();
+		
+        // Assert statements
+        assertTrue("Must accept budget of 50000 and target date of 500.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 50000, 2, 1, 3, 500));
+        assertTrue("Must accept budget of 50000 and target date of 0.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 50000, 2, 1, 3, 0));
+        assertTrue("Must accept budget of 50000 and target date of 1.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 50000, 2, 1, 3, 1));
+        assertTrue("Must accept budget of 50000 and target date of 999.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 50000, 2, 1, 3, 999));
+        assertTrue("Must accept budget of 50000 and target date of 1000.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 50000, 2, 1, 3, 1000));
+        
+        assertTrue("Must accept budget of 0 and target date of 500.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 0, 2, 1, 3, 500));
+        assertTrue("Must accept budget of 0 and target date of 0.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 0, 2, 1, 3, 0));
+        assertTrue("Must accept budget of 0 and target date of 1.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 0, 2, 1, 3, 1));
+        assertTrue("Must accept budget of 0 and target date of 999.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 0, 2, 1, 3, 999));
+        assertTrue("Must accept budget of 0 and target date of 1000.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 0, 2, 1, 3, 1000));
+        
+        assertTrue("Must accept budget of 1 and target date of 500.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 1, 2, 1, 3, 500));
+        assertTrue("Must accept budget of 1 and target date of 0.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 1, 2, 1, 3, 0));
+        assertTrue("Must accept budget of 1 and target date of 1.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 1, 2, 1, 3, 1));
+        assertTrue("Must accept budget of 1 and target date of 999.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 1, 2, 1, 3, 999));
+        assertTrue("Must accept budget of 1 and target date of 1000.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 1, 2, 1, 3, 1000));
+        
+        assertTrue("Must accept budget of 99999 and target date of 500.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 99999, 2, 1, 3, 500));
+        assertTrue("Must accept budget of 99999 and target date of 0.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 99999, 2, 1, 3, 0));
+        assertTrue("Must accept budget of 99999 and target date of 1.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 99999, 2, 1, 3, 1));
+        assertTrue("Must accept budget of 99999 and target date of 999.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 99999, 2, 1, 3, 999));
+        assertTrue("Must accept budget of 99999 and target date of 1000.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 99999, 2, 1, 3, 1000));
+        
+        assertTrue("Must accept budget of 100000 and target date of 500.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 100000, 2, 1, 3, 500));
+        assertTrue("Must accept budget of 100000 and target date of 0.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 100000, 2, 1, 3, 0));
+        assertTrue("Must accept budget of 100000 and target date of 1.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 100000, 2, 1, 3, 1));
+        assertTrue("Must accept budget of 100000 and target date of 999.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 100000, 2, 1, 3, 999));
+        assertTrue("Must accept budget of 100000 and target date of 1000.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 100000, 2, 1, 3, 1000));
+    }
+	
+	// #4 Basis-Path Coverage
+	@Test
+    public void Num4BasisPathCoverage() {
+			Num4Helper();
+			
+	        // Assert statements
+			// Path 1
+	        assertTrue("Must complete path 1 successfully.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 50000, 2, 1, 3, 500));
+	        // Path 2
+	        assertFalse("Must complete path 2 successfully.", ActivityController.addActivity("path1Test2", "", "", "path1Test2", dependencies, memberList, "pending", 50000, 2, 1, 3, 500));
+	        // Path 3
+	        assertFalse("Must complete path 3 successfully.", ActivityController.addActivity("path1Test3", today, "", "path1Test3", dependencies, memberList, "pending", 50000, 2, 1, 3, 500));
+	        // Path 4
+	        assertFalse("Must complete path 4 successfully.", ActivityController.addActivity("path1Test4", today, tomorrow, "path1Test4", dependencies, memberList, "pending", -1, -1, -1, -1, -1));
+	        // Path 5
+	        assertFalse("Must complete path 5 successfully.", ActivityController.addActivity("path1Test5", tomorrow, today, "path1Test5", dependencies, memberList, "pending", -1, -1, -1, -1, -1));
+	        // Path 6
+	        assertTrue("Must complete path 6 successfully.", ActivityController.addActivity("path1Test6", today, tomorrow, "path1Test6", dependenciesEmpty, memberList, "pending", 50000, 2, 1, 3, 500));
+	        // Path 7
+	        assertTrue("Must complete path 7 successfully.", ActivityController.addActivity("path1Test7", today, tomorrow, "path1Test7", dependencies, memberListEmpty, "pending", 50000, 2, 1, 3, 500));
+	    }
+	
+	// #5 Boundary Test
+	@Test
+    public void budgetShouldBeBetween0and1000000() {	
+		Num4N5Helper();
+		
+        // Assert statements
+        assertTrue("Budget must accept 500000.", ProjectController.editProject("boundaryTest1", "boundaryTest1", 500000));
+        assertTrue("Budget must accept 0.", ProjectController.editProject("boundaryTest2", "boundaryTest2", 0));
+        assertTrue("Budget must accept 1.", ProjectController.editProject("boundaryTest3", "boundaryTest3", 1));
+        assertTrue("Budget must accept 999999.", ProjectController.editProject("boundaryTest4", "boundaryTest4", 999999));
+        assertTrue("Budget must accept 1000000.", ProjectController.editProject("boundaryTest5", "boundaryTest5", 1000000));
+    }
+	
+	// #5 Basis-Path Coverage
+	@Test
+    public void Num5BasisPathCoverage() {
+		Num4N5Helper();
+		
+        // Assert statements
+		// Path 1
+        assertTrue("Must complete path 1 successfully.", ProjectController.editProject("path1Test1", "path1Test1", 500000));
+        // Path 3
+        assertFalse("Must complete path 3 successfully.", ProjectController.editProject("path1Test3", "path1Test3", -1));
+        // Path 4
+        assertFalse("Must complete path 4 successfully.", ProjectController.editProject("", "", 500000));
+        // Path 2
+		DataResource.selectedProject = null;
+        assertFalse("Must complete path 2 successfully.", ProjectController.editProject("path1Test2", "path1Test2", 500000));
     }
 	
 	@Test

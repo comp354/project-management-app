@@ -139,6 +139,9 @@ public class Projects {
 		this.managerID = managerID;
 		this.budget = budget;
 		this.description = description;
+		this.activityGraph = new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class);
+		this.activityList = new ArrayList<Activities>();
+		this.userList = null;
 	}
 	
 	/**

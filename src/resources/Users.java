@@ -52,7 +52,7 @@ public class Users {
 		this.lastName = lastName;
 		this.password = password;
 		this.id = iD;
-		switch (usertype)
+		switch (usertype.toUpperCase())
 		{
 		case "MANAGER":
 		{

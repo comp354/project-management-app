@@ -91,17 +91,31 @@ public class DataResource {
 	public static Projects getProjectByProjectIdFromDB(int projectId) {
 		Projects project = null;
 		
+		ArrayList<Users> userList = new ArrayList<Users>();
+		
 		Connection connection = DataResource.createConnectionToDB(dataBase);
-		String sql;
-		PreparedStatement ps;
+		String sql1, sql2;
+		PreparedStatement ps1, ps2;
 		
 		try {
-			sql = ("SELECT * FROM projects WHERE id=" + projectId);
-			ps = connection.prepareStatement(sql);
-			ResultSet rs = ps.executeQuery();
+			sql1 = ("SELECT * FROM projects WHERE id=" + projectId);
+			ps1 = connection.prepareStatement(sql1);
+			ResultSet rs1 = ps1.executeQuery();
 		
-			project = new Projects(rs.getInt("id"), rs.getString("name"), rs.getString("date"), rs.getString("description"), rs.getDouble("budget"),rs.getInt("manager_id"));
+			sql2 = ("SELECT id, first_name, last_name, username, password, user_type FROM users AS u "
+					+ "INNER JOIN user_project_relationships AS upr ON upr.user_id = u.id "
+					+ "WHERE upr.project_id = '" + projectId + "';");
+			ps2 = connection.prepareStatement(sql2);
+			ResultSet rs2 = ps2.executeQuery();
 			
+//			while(rs2.next())
+//			{
+//				Users user = new Users(rs2.getString("username"), rs2.getString("first_name"), rs2.getString("last_name"), rs2.getString("password"), rs2.getInt("id"), rs2.getString("usertype"));
+//				userList.add(user);			
+//			}
+//			
+//			project = new Projects(rs1.getString("name"), userList, rs1.getString("date"), rs1.getInt("id"), rs1.getInt("manager_id"), rs1.getString("description"), rs1.getDouble("budget"));
+			project = new Projects(rs1.getInt("id"), rs1.getString("name"), rs1.getString("date"), rs1.getString("description"), rs1.getDouble("budget"),rs1.getInt("manager_id"));
 		} catch (Exception exception) {
 			System.out.println(exception.getMessage());
 		}
