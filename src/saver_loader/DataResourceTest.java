@@ -336,15 +336,219 @@ public class DataResourceTest {
 		assertTrue("should have a performance index of 1", p.getCostPerformanceIndex() == 1);
 	}
 	
+	// #3 Basis-Path Coverage
+	@Test
+	public void testGetSchedulePerformanceBasisPath() {
+		Projects p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		Activities a = new Activities();
+		p.addActivity(a);
+		a.setProgress(TaskProgress.complete);
+		
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		try {
+			p.getEarnedValue();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+		
+		assertTrue("should have a budget of -1", p.getBudget() == -1);
+		try {
+			p.getSchedulePerformanceIndex();
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException ex) {
+		}
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		a.setBudget(1);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an earned value of 1", p.getEarnedValue() == 1);
+		
+		p.setBudget(0);
+		assertTrue("should have a budget of 0", p.getBudget() == 0);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		a.setBudget(2000);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an earned value of 2000", p.getEarnedValue() == 2000);
+		
+		p.setBudget(1500);
+		assertTrue("should have a budget of 1500", p.getBudget() == 1500);
+		assertTrue("should have a performance index of 1.3333333333333333", p.getSchedulePerformanceIndex() == 1.3333333333333333);
+	}
+	
+	// #3 Boundary Test
+	@Test
+	public void testGetSchedulePerformanceIndexWorstCase() {		
+		Projects p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		Activities a = new Activities();
+		p.addActivity(a);
+		a.setProgress(TaskProgress.complete);
+		
+		a.setBudget(0);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an earned value of 0", p.getEarnedValue() == 0);
+		
+		p.setBudget(0);
+		assertTrue("should have a budget of 0", p.getBudget() == 0);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p.setBudget(1);
+		assertTrue("should have a budget of 1", p.getBudget() == 1);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p.setBudget(500);
+		assertTrue("should have a budget of 500", p.getBudget() == 500);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p.setBudget(9999999);
+		assertTrue("should have a budget of 9999999", p.getBudget() == 9999999);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p.setBudget(10000000);
+		assertTrue("should have a budget of 10000000", p.getBudget() == 10000000);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		a.setBudget(1);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an earned value of 1", p.getEarnedValue() == 1);
+		
+		p.setBudget(0);
+		assertTrue("should have a budget of 0", p.getBudget() == 0);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p.setBudget(1);
+		assertTrue("should have a budget of 1", p.getBudget() == 1);
+		assertTrue("should have a performance index of 1", p.getSchedulePerformanceIndex() == 1);
+		
+		p.setBudget(500);
+		assertTrue("should have a budget of 500", p.getBudget() == 500);
+		assertTrue("should have a performance index of 0.002", p.getSchedulePerformanceIndex() == 0.002);
+		
+		p.setBudget(9999999);
+		assertTrue("should have a budget of 9999999", p.getBudget() == 9999999);
+		assertTrue("should have a performance index of 1.00000010000001E-7", p.getSchedulePerformanceIndex() == 1.00000010000001E-7);
+		
+		p.setBudget(10000000);
+		assertTrue("should have a budget of 10000000", p.getBudget() == 10000000);
+		assertTrue("should have a performance index of 0.0000001", p.getSchedulePerformanceIndex() == 0.0000001);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		a.setBudget(500);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an earned value of 500", p.getEarnedValue() == 500);
+		
+		p.setBudget(0);
+		assertTrue("should have a budget of 0", p.getBudget() == 0);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p.setBudget(1);
+		assertTrue("should have a budget of 1", p.getBudget() == 1);
+		assertTrue("should have a performance index of 500", p.getSchedulePerformanceIndex() == 500);
+		
+		p.setBudget(500);
+		assertTrue("should have a budget of 500", p.getBudget() == 500);
+		assertTrue("should have a performance index of 1", p.getSchedulePerformanceIndex() == 1);
+		
+		p.setBudget(9999999);
+		assertTrue("should have a budget of 9999999", p.getBudget() == 9999999);
+		assertTrue("should have a performance index of 5.00000050000005E-5", p.getSchedulePerformanceIndex() == 5.00000050000005E-5);
+		
+		p.setBudget(10000000);
+		assertTrue("should have a budget of 10000000", p.getBudget() == 10000000);
+		assertTrue("should have a performance index of 0.00005", p.getSchedulePerformanceIndex() == 0.00005);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		a.setBudget(9999999);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an earned value of 9999999", p.getEarnedValue() == 9999999);
+		
+		p.setBudget(0);
+		assertTrue("should have a budget of 0", p.getBudget() == 0);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p.setBudget(1);
+		assertTrue("should have a budget of 1", p.getBudget() == 1);
+		assertTrue("should have a performance index of 9999999", p.getSchedulePerformanceIndex() == 9999999);
+		
+		p.setBudget(500);
+		assertTrue("should have a budget of 500", p.getBudget() == 500);
+		assertTrue("should have a performance index of 19999.998", p.getSchedulePerformanceIndex() == 19999.998);
+		
+		p.setBudget(9999999);
+		assertTrue("should have a budget of 9999999", p.getBudget() == 9999999);
+		assertTrue("should have a performance index of 1", p.getSchedulePerformanceIndex() == 1);
+		
+		p.setBudget(10000000);
+		assertTrue("should have a budget of 10000000", p.getBudget() == 10000000);
+		assertTrue("should have a performance index of 0.9999999", p.getSchedulePerformanceIndex() == 0.9999999);
+		
+		p = new Projects();
+		p.setActivityGraph(new DirectedAcyclicGraph<Activities,DefaultEdge>(DefaultEdge.class));
+		p.setActivityList(new ArrayList<Activities>());
+		p.addActivity(a);
+		a.setBudget(10000000);
+		a.calculateEarnedValue();
+		p.calculateTimes();
+		assertTrue("should have an earned value of 10000000", p.getEarnedValue() == 10000000);
+		
+		p.setBudget(0);
+		assertTrue("should have a budget of 0", p.getBudget() == 0);
+		assertTrue("should have a performance index of 0", p.getSchedulePerformanceIndex() == 0);
+		
+		p.setBudget(1);
+		assertTrue("should have a budget of 1", p.getBudget() == 1);
+		assertTrue("should have a performance index of 10000000", p.getSchedulePerformanceIndex() == 10000000);
+		
+		p.setBudget(500);
+		assertTrue("should have a budget of 500", p.getBudget() == 500);
+		assertTrue("should have a performance index of 20000", p.getSchedulePerformanceIndex() == 20000);
+		
+		p.setBudget(9999999);
+		assertTrue("should have a budget of 9999999", p.getBudget() == 9999999);
+		assertTrue("should have a performance index of 1.00000010000001", p.getSchedulePerformanceIndex() == 1.00000010000001);
+		
+		p.setBudget(10000000);
+		assertTrue("should have a budget of 10000000", p.getBudget() == 10000000);
+		assertTrue("should have a performance index of 1", p.getSchedulePerformanceIndex() == 1);
+	}
+	
 	// Helper for #4 and #5
-	private void Num4N5Helper() {
+	private void num4N5Helper() {
 		DataResource.currentUser = DataResource.getUserByIdFromDB(1);
 		DataResource.selectedProject = DataResource.getProjectByProjectIdFromDB(1);
 	}
 	
 	// Helper for #4
-	public void Num4Helper() {
-		Num4N5Helper();
+	public void num4Helper() {
+		num4N5Helper();
 		
 		memberListEmpty = new ArrayList<String>();
 		memberList = new ArrayList<String>();
@@ -361,7 +565,7 @@ public class DataResourceTest {
 	// #4 Boundary Test
 	@Test
     public void budgetShouldBeBetween0And100000AlsoTargetDateShouldBeBetween0And1000() {
-		Num4Helper();
+		num4Helper();
 		
         // Assert statements
         assertTrue("Must accept budget of 50000 and target date of 500.", ActivityController.addActivity("path1Test1", today, tomorrow, "path1Test1", dependencies, memberList, "pending", 50000, 2, 1, 3, 500));
@@ -398,7 +602,7 @@ public class DataResourceTest {
 	// #4 Basis-Path Coverage
 	@Test
     public void Num4BasisPathCoverage() {
-			Num4Helper();
+			num4Helper();
 			
 	        // Assert statements
 			// Path 1
@@ -420,7 +624,7 @@ public class DataResourceTest {
 	// #5 Boundary Test
 	@Test
     public void budgetShouldBeBetween0and1000000() {	
-		Num4N5Helper();
+		num4N5Helper();
 		
         // Assert statements
         assertTrue("Budget must accept 500000.", ProjectController.editProject("boundaryTest1", "boundaryTest1", 500000));
@@ -433,7 +637,7 @@ public class DataResourceTest {
 	// #5 Basis-Path Coverage
 	@Test
     public void Num5BasisPathCoverage() {
-		Num4N5Helper();
+		num4N5Helper();
 		
         // Assert statements
 		// Path 1
